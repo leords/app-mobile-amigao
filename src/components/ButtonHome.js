@@ -36,6 +36,7 @@ const styles = StyleSheet.create({
   iconWrapper: {
     width: '100%',
     marginBottom: 2, 
+    marginLeft: 4
   },
   text: {
     color: 'white',
