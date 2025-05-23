@@ -13,6 +13,7 @@ export default function Pedido() {
   const [quantidade, setQuantidade] = useState('');
   const [itensPedido, setItensPedido] = useState([]);
   const [mostrarSugestoes, setMostrarSugestoes] = useState(false);
+  const [formaPagamento, setFormaPagamento] = useState('A VISTA');
 
   const navigation = useNavigation();
 
@@ -27,18 +28,37 @@ export default function Pedido() {
     carregarProdutos();
   }, []);
 
+  // função que salva a array do pedido na planilha
+  const enviarParaPlanilha = async (linhaFinal) => {
+  try {
+    const response = await fetch('https://script.google.com/macros/s/AKfycbwQbDJGwPblkVDTlGu0FJf3RFvaWKnWEASZQlwE3qrQRnC94GTYk6wcy-oj9m042jMf/exec', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ linhaFinal })
+    });
+
+    const texto = await response.text();
+    console.log("Resposta da planilha:", texto);
+  } catch (err) {
+    console.error("Erro ao enviar para planilha:", err);
+  }
+};
+
+// função que adiciona um novo item no array em orçamento de produtos.
   const adicionarItem = () => {
     if (!produtoSelecionado || !quantidade) return;
 
-    const preco = parseFloat(produtoSelecionado['Valor Und']);
+    const preco = parseFloat(produtoSelecionado['Valor']);
     const qtd = parseInt(quantidade);
     const total = preco * qtd;
 
     const novoItem = {
-      id: Date.now(),
+      id: Date.now(), // resolve como um ID
+      quantidade: qtd,
       nome: produtoSelecionado.Produto,
       preco,
-      quantidade: qtd,
       total,
     };
 
@@ -49,35 +69,66 @@ export default function Pedido() {
     setMostrarSugestoes(false); // Impede que a lista reabra
   };
 
+  //Função que remove um item do orçamento do array do produtos
   const removerItem = (id) => {
     const novaLista = itensPedido.filter(item => item.id !== id);
     setItensPedido(novaLista);
   };
 
+  //Função que salva o orçamento como pedido
   const salvarPedido = async () => {
-    const pedido = {
-      id: Date.now(),
-      cliente,
-      itens: itensPedido,
-      total: itensPedido.reduce((acc, i) => acc + i.total, 0),
-    };
+  const dataAtual = new Date();
+  const dataFormatada = dataAtual.toLocaleDateString('pt-BR');
 
-    const pedidosAntigos = JSON.parse(await AsyncStorage.getItem('@pedidos')) || [];
-    await AsyncStorage.setItem('@pedidos', JSON.stringify([...pedidosAntigos, pedido]));
+  //Busca por API vendedor ao fazer o login
+  const vendedor = "LEONARDO";
+ 
+  //Criando o cabeçalho que é padrão da planilha = data - cliente - vendedor
+  const cabecalho = [dataFormatada, cliente.Cliente, vendedor];
 
-    // Resetar
-    setItensPedido([]);
-    setProdutoQuery('');
-    setProdutoSelecionado(null);
-    setQuantidade('');
-    setMostrarSugestoes(false);
-  };
+  const produtosLinearizados = itensPedido.flatMap((item, index) => [
+    item.quantidade,
+    item.nome,
+    item.preco,
+    item.total,
+  ]);
+
+  //Quantidade máxima de produtos (19) × 4 colunas = 76 colunas
+  //Caso ter menos que isso de produtos, considere como branco a lacuna.
+  while (produtosLinearizados.length < 76) {
+    produtosLinearizados.push('', '', '', '');
+  }
+  //percorrendo os item para fazer o total
+  const totalGeral = itensPedido.reduce((acc, item) => acc + item.total, 0);
+  // criando o rodapé final do array
+  const rodape = ['TOTAL', totalGeral, 'PAGAMENTO', formaPagamento];
+
+  //Faz a junção para criar linha final no padrão data-cliente-vendedor-produtos...
+  const linhaFinal = [...cabecalho, ...produtosLinearizados, ...rodape];
+
+  //Salvar no AsyncStorage
+  const pedidosAntigos = JSON.parse(await AsyncStorage.getItem('@pedidos')) || [];
+  await AsyncStorage.setItem('@pedidos', JSON.stringify([...pedidosAntigos, linhaFinal]));
+
+  console.log('Pedido formatado para exportação:', linhaFinal);
+
+  //Chamando a função que salva o array do pedido na planilha
+  enviarParaPlanilha(linhaFinal)
+
+  //Resetar as variaveis
+  setItensPedido([]);
+  setProdutoQuery('');
+  setProdutoSelecionado(null);
+  setQuantidade('');
+  setMostrarSugestoes(false);
+};
 
   return (
     <View style={styles.container}>
+      {/* TITULO + CLIENTE SELECIONADO */}
       <Text style={styles.titulo}>CLIENTE {cliente.Cliente}</Text>
 
-      {/* Produto */}
+      {/* LISTA PARA SELECIONAR PRODUTOS */}
       <Text style={styles.label}>Selecione o produto</Text>
       <Autocomplete
         data={
@@ -110,7 +161,7 @@ export default function Pedido() {
         inputContainerStyle={styles.input}
       />
 
-      {/* Quantidade */}
+      {/* INPUT DE QUANTIDADE */}
       <View style={styles.quantidade}>
           <Text style={styles.label}>Quantidade</Text>
           <TextInput
@@ -121,7 +172,8 @@ export default function Pedido() {
             onChangeText={setQuantidade}
           />
       </View>
-      {/* Total item */}
+
+      {/* TOTAL DO ITEM SELECIONADO */}
       {produtoSelecionado && quantidade ? (
         <Text style={styles.total}>Item: R$ {(produtoSelecionado['Valor'] * parseInt(quantidade)).toFixed(2)}</Text>
       ) : null}
@@ -130,7 +182,8 @@ export default function Pedido() {
         <Text style={styles.botaoTexto}>Adicionar Produto</Text>
       </TouchableOpacity>
 
-      {/* Lista de produtos adicionados */}
+      
+      {/* LISTA DE PRODUTOS COLOCADOS NO PEDIDO */}
       <FlatList
         data={itensPedido}
         keyExtractor={(item) => item.id.toString()}
@@ -144,8 +197,33 @@ export default function Pedido() {
         )}
       />
 
+      {/* TOTAL DO PEDIDO */}
       <Text style={styles.total}>Total Pedido: R$ {itensPedido.reduce((acc, i) => acc + i.total, 0).toFixed(2)}</Text>
-        <View style={styles.containerButton}>
+
+      {/* FORMA DE PAGAMENTO */}
+      <Text style={styles.label}>Forma de Pagamento</Text>
+        <FlatList
+          data={["A VISTA", "CARTÃO", "PIX", "CHEQUE"]}
+          keyExtractor={(item) => item}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={[
+                styles.opcaoPagamento,
+                formaPagamento === item && styles.opcaoSelecionada
+              ]}
+              onPress={() => setFormaPagamento(item)}
+            >
+              <Text style={styles.opcaoTexto}>
+                {item}
+              </Text>
+            </TouchableOpacity>
+          )}
+        />
+
+      {/* BOTOES DE CANCELAR E SALVAR */}
+      <View style={styles.containerButton}>
 
           <TouchableOpacity 
             style={[styles.botaoCondition, { backgroundColor: 'red' }]} 
@@ -167,7 +245,7 @@ export default function Pedido() {
             onPress={() => {
               Alert.alert(
                 "Confirmar Salvar",
-                "Deseja realmente salvar o pedido?",
+                `Deseja realmente salvar o pedido no ${formaPagamento}?`,
                 [
                   { text: "Não", style: "cancel" },
                   { text: "Sim", onPress: () => salvarPedido() }
@@ -177,14 +255,16 @@ export default function Pedido() {
             <Text style={styles.botaoTexto}>Salvar Pedido</Text>
           </TouchableOpacity>
 
-        </View>
+      </View>
+
+    
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20 
+    padding: 24 
   },
   titulo: {
     fontSize: 20, 
@@ -193,8 +273,8 @@ const styles = StyleSheet.create({
     textAlign: 'center'
   },
   label: { 
-    marginTop: 10,
-    marginBottom: 5,
+    marginTop: 4,
+    marginBottom: 4,
     fontWeight: 600
   },
   input: { 
@@ -214,7 +294,7 @@ const styles = StyleSheet.create({
     marginBottom: 10, 
     borderRadius: 5,
     width: '20%',
-    height: 80,
+    height: 50,
     textAlign: 'center',
     fontSize: 30,
     fontWeight: 600
@@ -244,7 +324,7 @@ const styles = StyleSheet.create({
   itemLinha: { 
     flexDirection: 'row', 
     justifyContent: 'space-between', 
-    marginBottom: 8,
+    marginBottom: 10,
   },
   total: { 
     fontWeight: 'bold', 
@@ -256,6 +336,23 @@ const styles = StyleSheet.create({
   containerButton: {
     flexDirection: 'row',
     justifyContent: 'space-evenly'
-  }
+  },
+  opcaoPagamento: {
+  paddingVertical: 10,
+  paddingHorizontal: 10,
+  borderRadius: 8,
+  borderWidth: 1,
+  borderColor: '#ccc',
+  backgroundColor: '#f9f9f9',
+  marginLeft: 13
+},
+opcaoSelecionada: {
+  backgroundColor: '#4caf50',
+  borderColor: '#4caf50'
+},
+opcaoTexto: {
+  color: '#333',
+  fontWeight: 'bold'
+}
 
 });

@@ -1,9 +1,11 @@
-import { View, Text, Image, StyleSheet  } from "react-native";
+import { View, Text, Image, StyleSheet, ActivityIndicator } from "react-native";
+import { useState } from "react";
 import Header from "../components/Header";
 
 export default function InformationPage() {
 
     const image = require('../assets/logo.png');
+    const [loading, setLoading] = useState(true);
 
    return (
     <View style={styles.container}>
@@ -41,9 +43,13 @@ export default function InformationPage() {
 
         <View style={styles.bankingInfo}>
             <View style={styles.containerImage}>
+                {loading ? (
+                  <ActivityIndicator size="small" color="black" />
+                ) : null}
                 <Image 
                     source={{uri: 'https://drive.google.com/uc?export=view&id=1tjbhNynG9qQZ1wqhHVMov6OdOF5VabLr'}} // Substitua pelo QR code
                     style={styles.qrCode} 
+                    onLoadEnd={() => setLoading(false)}
                 />
             </View>
 

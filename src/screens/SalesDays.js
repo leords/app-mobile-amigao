@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { View, FlatList, StyleSheet, ActivityIndicator, Text } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
 import SaleCard from '../components/SaleCard';
 import colors from '../styles/colors'
 import Header from '../components/Header';
@@ -13,8 +12,6 @@ export default function SalesDays() {
   const [reload, setReload] = useState(true)
 
   const image = require('../assets/logo.png');
-  const imagemReload = require('../assets/amiguinho_loading.png')
-
 
   useEffect(() => {
     async function fetchVendas() {
@@ -64,7 +61,7 @@ export default function SalesDays() {
         onPress={() => setReload(!reload)} 
         icone={'reload'} /* enviar o nome do icone a ser renderizado no header */
         descriptionIcone={'Atualizar'} /* enviar a descrição do botão */
-        image={ reload ? image : imagemReload } /* enviar a imagem */
+        image={ image } /* enviar a imagem */
       />
       <FlatList
         data={sales}
