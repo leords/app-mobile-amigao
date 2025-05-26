@@ -37,6 +37,12 @@ export default function MainMenu( ) {
               name={'Produtos'}
           />
           <ButtonHome 
+              BGcolor={'orange'}
+              destinationPage={'ListOrder'}
+              image={<AntDesign name="bars" size={32} color="white"  />}
+              name={'Lista de pedidos'}
+          />
+          <ButtonHome 
               BGcolor={'#32C759'}
               destinationPage={'Info'}
               image={<AntDesign name="idcard" size={32} color="white"  />}

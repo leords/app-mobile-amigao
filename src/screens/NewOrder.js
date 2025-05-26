@@ -86,6 +86,8 @@ export default function Pedido() {
   //Criando o cabeçalho que é padrão da planilha = data - cliente - vendedor
   const cabecalho = [dataFormatada, cliente.Cliente, vendedor];
 
+  // ele achata os dados para uma única linha, ou seja um array inteiro de objetos em uma unica linha = [1, array1, 2, array2, ...]
+  // necessario para salvar em planilhas!!!!
   const produtosLinearizados = itensPedido.flatMap((item, index) => [
     item.quantidade,
     item.nome,
@@ -99,18 +101,37 @@ export default function Pedido() {
     produtosLinearizados.push('', '', '', '');
   }
   //percorrendo os item para fazer o total
+  //reduce percorre o objeto para acumular resultados, neste caso o acumulador vai somar os item.total do array itensPedido!!!
   const totalGeral = itensPedido.reduce((acc, item) => acc + item.total, 0);
-  // criando o rodapé final do array
+  //criando o rodapé final do array
   const rodape = ['TOTAL', totalGeral, 'PAGAMENTO', formaPagamento];
 
   //Faz a junção para criar linha final no padrão data-cliente-vendedor-produtos...
+  //os 3 pontos é um = spread: desestrutura\espalha os elementos do array, possibilitando juntar todos os elementos de cada array e apenas um array, mantendo a ordem. 
+  //Usando spread operator para concatenar três arrays diferentes em um único array plano:
   const linhaFinal = [...cabecalho, ...produtosLinearizados, ...rodape];
 
-  //Salvar no AsyncStorage
-  const pedidosAntigos = JSON.parse(await AsyncStorage.getItem('@pedidos')) || [];
-  await AsyncStorage.setItem('@pedidos', JSON.stringify([...pedidosAntigos, linhaFinal]));
+  //Criando um array de objetos para organizar as partes do pedido separadamente:
+  //Apenas para conseguir listar no APP
+  const pedidoFinal = {
+    cabecalho,
+    itensPedido, 
+    rodape
+  };
 
-  console.log('Pedido formatado para exportação:', linhaFinal);
+  console.log('pedido final: ', pedidoFinal)
+
+  //Salvar no AsyncStorage pedidos estruturados com destino apenas de lista no APP.
+  const pedidosAntigos = JSON.parse(await AsyncStorage.getItem('@pedidos')) || [];
+  await AsyncStorage.setItem('@pedidos', JSON.stringify([...pedidosAntigos, pedidoFinal]));
+
+  console.log('pedido Async', pedidosAntigos)
+
+    //Salvar no AsyncStorage pedidos lineares com destino somente para a Planilha.
+  const pedidosAntigosLineares = JSON.parse(await AsyncStorage.getItem('@pedidosLineares')) || [];
+  await AsyncStorage.setItem('@pedidosLineares', JSON.stringify([...pedidosAntigosLineares, linhaFinal]));
+
+  //console.log('Pedido formatado para exportação:', pedidosAntigos);
 
   //Chamando a função que salva o array do pedido na planilha
   enviarParaPlanilha(linhaFinal)

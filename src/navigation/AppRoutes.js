@@ -9,6 +9,7 @@ import InformationPage from '../screens/InformationPage';
 import ProductPage from '../screens/ProductPage'
 import NewOrder from '../screens/NewOrder'
 import ClientPage from '../screens/ClientPage';
+import ListOrder from '../screens/ListOrders';
 
 const { Navigator, Screen } = createNativeStackNavigator();
 
@@ -23,6 +24,7 @@ export function AppRoutes() {
                 <Screen name="Product" component={ProductPage} />
                 <Screen name="Order" component={NewOrder} />
                 <Screen name="Client" component={ClientPage} />
+                <Screen name="ListOrder" component={ListOrder} />
             </Navigator>
         </NavigationContainer>
     )
