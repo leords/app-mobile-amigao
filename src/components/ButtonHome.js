@@ -1,18 +1,10 @@
+import { useNavigation } from "@react-navigation/native";
+import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
 
-import { useNavigation } from '@react-navigation/native';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Image
-} from 'react-native';
+export default function ButtonHome({ BGcolor, destinationPage, image, name }) {
+  const navigation = useNavigation();
 
-export default function ButtonHome({BGcolor, destinationPage, image, name}) {
-
-    const navigation = useNavigation();
-
-    return (
+  return (
     <TouchableOpacity
       style={[styles.button, { backgroundColor: BGcolor }]}
       onPress={() => navigation.navigate(destinationPage)}
@@ -25,22 +17,22 @@ export default function ButtonHome({BGcolor, destinationPage, image, name}) {
 
 const styles = StyleSheet.create({
   button: {
-    width: '48%', // Para caber 2 por linha com margem
-    height: '150',
+    width: "48%", // Para caber 2 por linha com margem
+    height: "150",
     borderRadius: 30,
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: 18,
     marginBottom: 2,
   },
   iconWrapper: {
-    width: '100%',
-    marginBottom: 2, 
-    marginLeft: 4
+    width: "100%",
+    marginBottom: 2,
+    marginLeft: 4,
   },
   text: {
-    color: 'white',
+    color: "white",
     fontSize: 15,
-    width: '100%'
+    width: "100%",
   },
 });

@@ -1,14 +1,21 @@
-import React, { useEffect, useState } from 'react';
-import { View, TextInput, FlatList, Text, StyleSheet, Image} from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  TextInput,
+  FlatList,
+  Text,
+  StyleSheet,
+  Image,
+} from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import Header from "../components/Header";
 
 export default function ProductPage() {
   const [produtos, setProdutos] = useState([]);
-  const [busca, setBusca] = useState('');
+  const [busca, setBusca] = useState("");
   const [produtosFiltrados, setProdutosFiltrados] = useState([]);
 
-  const image = require('../assets/vasilhames.png');
+  const image = require("../assets/vasilhames.png");
 
   useEffect(() => {
     carregarProdutosLocais();
@@ -20,7 +27,7 @@ export default function ProductPage() {
 
   const carregarProdutosLocais = async () => {
     try {
-      const jsonValue = await AsyncStorage.getItem('@produtos');
+      const jsonValue = await AsyncStorage.getItem("@produtos");
       if (jsonValue != null) {
         const data = JSON.parse(jsonValue);
         setProdutos(data);
@@ -28,60 +35,61 @@ export default function ProductPage() {
         buscarProdutosDaApi(); // Se não houver no AsyncStorage, busca na API
       }
     } catch (e) {
-      console.error('Erro ao carregar produtos locais:', e);
+      console.error("Erro ao carregar produtos locais:", e);
     }
   };
 
   const buscarProdutosDaApi = async () => {
     try {
-      const response = await fetch('https://script.google.com/macros/s/AKfycbwjMFZ9wWaUEQICGpO7qPaNCtQuOLr7N9hVxDJGmffeDdNN4Odx0mdbsB0JV-oNP1H8/exec'); // Substitua pela URL correta
+      const response = await fetch(
+        "https://script.google.com/macros/s/AKfycbwjMFZ9wWaUEQICGpO7qPaNCtQuOLr7N9hVxDJGmffeDdNN4Odx0mdbsB0JV-oNP1H8/exec"
+      ); // Substitua pela URL correta
       const data = await response.json();
 
       if (Array.isArray(data.saida)) {
-        await AsyncStorage.setItem('@produtos', JSON.stringify(data.saida));
+        await AsyncStorage.setItem("@produtos", JSON.stringify(data.saida));
         setProdutos(data.saida);
       } else {
-        console.warn('Resposta inesperada:', data);
+        console.warn("Resposta inesperada:", data);
       }
     } catch (e) {
-      console.error('Erro ao buscar da API:', e);
+      console.error("Erro ao buscar da API:", e);
     }
   };
 
   const filtrarProdutos = () => {
     const texto = busca.toLowerCase();
-    const filtrados = produtos.filter(p =>
-      typeof p.Produto === 'string' && p.Produto.toLowerCase().includes(texto)
+    const filtrados = produtos.filter(
+      (p) =>
+        typeof p.Produto === "string" && p.Produto.toLowerCase().includes(texto)
     );
     setProdutosFiltrados(filtrados);
   };
 
   const renderItem = ({ item }) => (
     <View style={styles.item}>
-        
-        <View style={styles.containerDescription}>
-            <Text style={styles.nome}>{item.Produto}</Text>
-            <Text style={styles.segmento}>{item.Segmento}</Text>
+      <View style={styles.containerDescription}>
+        <Text style={styles.nome}>{item.Produto}</Text>
+        <Text style={styles.segmento}>{item.Segmento}</Text>
+      </View>
+      <View style={styles.containerPrice}>
+        <Text style={styles.preco}>R$ {item["Valor"].toFixed(2)}</Text>
+        <View style={styles.und}>
+          <Text style={styles.quantidade}>{item["Quantidade"]} und x </Text>
+          <Text style={styles.precoUnd}>R$ {item["Valor Und"].toFixed(2)}</Text>
         </View>
-        <View style={styles.containerPrice}>
-            <Text style={styles.preco}>R$ {item['Valor'].toFixed(2)}</Text>
-            <View style={styles.und}>
-                <Text style={styles.quantidade}>{item['Quantidade']} und  x </Text>
-                <Text style={styles.precoUnd}>R$ {item['Valor Und'].toFixed(2)}</Text>
-            </View>
-        </View>
+      </View>
     </View>
   );
 
   return (
     <View style={styles.container}>
-    
-        <Header 
-            onPress={() => ' '} 
-            icone={''} /* enviar o nome do icone a ser renderizado no header */
-            descriptionIcone={''} /* enviar a descrição do botão */
-            image={image} /* enviar a imagem */ 
-        />
+      <Header
+        onPress={() => " "}
+        icone={""} /* enviar o nome do icone a ser renderizado no header */
+        descriptionIcone={""} /* enviar a descrição do botão */
+        image={image} /* enviar a imagem */
+      />
       <TextInput
         placeholder="Buscar produto"
         value={busca}
@@ -92,7 +100,9 @@ export default function ProductPage() {
         data={produtosFiltrados}
         keyExtractor={(item) => item.Id.toString()}
         renderItem={renderItem}
-        ListEmptyComponent={<Text style={styles.vazio}>Nenhum produto encontrado</Text>}
+        ListEmptyComponent={
+          <Text style={styles.vazio}>Nenhum produto encontrado</Text>
+        }
       />
     </View>
   );
@@ -102,55 +112,55 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#FFF',
+    backgroundColor: "#FFF",
   },
-  logo:{
-    alignItems: 'center',
-    justifyContent: 'center',
+  logo: {
+    alignItems: "center",
+    justifyContent: "center",
     width: 100,
     height: 100,
     flex: 1,
-    backgroundColor: 'red'
+    backgroundColor: "red",
   },
   input: {
     borderWidth: 1,
-    borderColor: '#CCC',
+    borderColor: "#CCC",
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
   },
   item: {
-    flexDirection: 'row',
+    flexDirection: "row",
     padding: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#EEE',
+    borderBottomColor: "#EEE",
   },
   nome: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
-  segmento : {
+  segmento: {
     fontSize: 12,
-    fontWeight: '400',
+    fontWeight: "400",
   },
   containerDescription: {
-    width: '50%',
+    width: "50%",
   },
   containerPrice: {
-    width: '50%',
-    alignItems: 'flex-end',
-    justifyContent: 'flex-end',
+    width: "50%",
+    alignItems: "flex-end",
+    justifyContent: "flex-end",
   },
   preco: {
     fontSize: 17,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   und: {
-    flexDirection: 'row'
+    flexDirection: "row",
   },
   vazio: {
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: 32,
-    color: '#888',
+    color: "#888",
   },
 });

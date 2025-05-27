@@ -1,5 +1,4 @@
-
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation } from "@react-navigation/native";
 import {
   View,
   Text,
@@ -9,22 +8,23 @@ import {
   KeyboardAvoidingView,
   Platform,
   TouchableOpacity,
-  ScrollView
-} from 'react-native';
-
+  ScrollView,
+} from "react-native";
 
 export default function LoginScreen() {
-
   const navigation = useNavigation();
-  
+
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={styles.container}
     >
-      <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        keyboardShouldPersistTaps="handled"
+      >
         <Image
-          source={require('../assets/logo_name_vertical.png')} // coloque sua imagem aqui
+          source={require("../assets/logo_name_vertical.png")} // coloque sua imagem aqui
           style={styles.logo}
           resizeMode="contain"
         />
@@ -41,7 +41,10 @@ export default function LoginScreen() {
           placeholderTextColor="#888"
         />
 
-        <TouchableOpacity onPress={() => navigation.navigate('Home')} style={styles.button}>
+        <TouchableOpacity
+          onPress={() => navigation.navigate("Home")}
+          style={styles.button}
+        >
           <Text style={styles.buttonText}>Entrar</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -53,45 +56,45 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   scrollContainer: {
     flexGrow: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 60,
   },
   logo: {
-    width: '80%',
+    width: "80%",
     height: 200,
     marginBottom: 60,
   },
   input: {
-    width: '100%',
+    width: "100%",
     padding: 14,
     marginVertical: 8,
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
     borderRadius: 8,
     fontSize: 16,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: "#f9f9f9",
   },
   button: {
-    backgroundColor: '#DC3545',
+    backgroundColor: "#DC3545",
     padding: 16,
     borderRadius: 8,
     marginTop: 16,
-    width: '100%',
-    alignItems: 'center',
+    width: "100%",
+    alignItems: "center",
   },
   buttonText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    color: "#fff",
+    fontWeight: "bold",
     fontSize: 16,
   },
   textFooter: {
     fontSize: 12,
-    color: 'grey',
-    textAlign: 'center'
-  }
+    color: "grey",
+    textAlign: "center",
+  },
 });
