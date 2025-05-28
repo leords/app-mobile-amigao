@@ -35,27 +35,6 @@ export default function Pedido() {
     carregarProdutos();
   }, []);
 
-  // função que salva a array do pedido na planilha
-  const enviarParaPlanilha = async (linhaFinal) => {
-    try {
-      const response = await fetch(
-        "https://script.google.com/macros/s/AKfycbwQbDJGwPblkVDTlGu0FJf3RFvaWKnWEASZQlwE3qrQRnC94GTYk6wcy-oj9m042jMf/exec",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ linhaFinal }),
-        }
-      );
-
-      const texto = await response.text();
-      console.log("Resposta da planilha:", texto);
-    } catch (err) {
-      console.error("Erro ao enviar para planilha:", err);
-    }
-  };
-
   // função que adiciona um novo item no array em orçamento de produtos.
   const adicionarItem = () => {
     if (!produtoSelecionado || !quantidade) return;
@@ -129,9 +108,9 @@ export default function Pedido() {
       rodape,
     };
 
-    console.log("pedido final: ", pedidoFinal);
+    console.log("pedido Estruturado: ", pedidoFinal);
 
-    //Salvar no AsyncStorage pedidos estruturados com destino apenas de lista no APP.
+    //Salvando no AsyncStorage pedidos estruturados - PARA LISTAR NO APP.
     const pedidosAntigos =
       JSON.parse(await AsyncStorage.getItem("@pedidos")) || [];
     await AsyncStorage.setItem(
@@ -139,9 +118,9 @@ export default function Pedido() {
       JSON.stringify([...pedidosAntigos, pedidoFinal])
     );
 
-    console.log("pedido Async", pedidosAntigos);
+    console.log("pedido Linear: ", linhaFinal);
 
-    //Salvar no AsyncStorage pedidos lineares com destino somente para a Planilha.
+    //Salvando no AsyncStorage pedidos lineares - PARA PLANILHA.
     const pedidosAntigosLineares =
       JSON.parse(await AsyncStorage.getItem("@pedidosLineares")) || [];
     await AsyncStorage.setItem(
@@ -149,10 +128,7 @@ export default function Pedido() {
       JSON.stringify([...pedidosAntigosLineares, linhaFinal])
     );
 
-    //console.log('Pedido formatado para exportação:', pedidosAntigos);
-
-    //Chamando a função que salva o array do pedido na planilha
-    enviarParaPlanilha(linhaFinal);
+    console.log("pedidos Lineares: ", pedidosAntigosLineares);
 
     //Resetar as variaveis
     setItensPedido([]);

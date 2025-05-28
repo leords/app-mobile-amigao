@@ -6,6 +6,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState } from "react";
 import { ApagarStorage } from "../storage/removeStorage";
 import { format } from "date-fns";
+import { Discharge } from "../services/Discharge";
 
 export default function Communication() {
   const [pedidos, setPedidos] = useState([]);
@@ -21,18 +22,39 @@ export default function Communication() {
   };
 
   const buscarPedidos = async () => {
-    const dados = await AsyncStorage.getItem("@pedidos");
+    const dados = await AsyncStorage.getItem("@pedidosLineares");
     if (dados) setPedidos(JSON.parse(dados));
+  };
+
+  const validarDescarga = async () => {
+    console.log(pedidos);
+    const existePedido = pedidos.some(
+      (pedido) => pedido?.[0]?.[0] ?? null === pegarDataAtual()
+    );
+    if (existePedido) {
+      await Discharge();
+    } else {
+      Alert.alert("você não tem nenhum pedido com a data de hoje");
+    }
   };
 
   const validarCarga = async () => {
     const existePedido = pedidos.some(
-      (pedido) => pedido.cabecalho?.[0] < pegarDataAtual()
+      //como é um array dentro um array = bidimensional
+      (pedido) => pedido?.[0]?.[0] ?? null === pegarDataAtual()
     );
     if (existePedido) {
-      await ApagarStorage("@pedidos");
+      await ApagarStorage("@pedidosLineares");
+
+      const dados2 = await AsyncStorage.getItem("@pedidosLineares");
+
+      if (!dados2 || dados2 === null) {
+        Alert.alert("Carva realizada com sucesso!");
+      }
     } else {
-      return "Tem pedidos com a mesma data de hoje!";
+      Alert.alert(
+        "Não é possivel fazer a carga no momento, você tem pedidos com a data de hoje!"
+      );
     }
   };
 
@@ -70,12 +92,7 @@ export default function Communication() {
               "Deseja realmente dar descarga?",
               [
                 { text: "Não", style: "cancel" },
-                {
-                  text: "Sim",
-                  onPress: () => {
-                    "CHAMANDO FUNÇÃO PARA DESCARREGAR";
-                  },
-                },
+                { text: "Sim", onPress: () => validarDescarga() },
               ]
             );
           }}

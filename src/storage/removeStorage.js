@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Alert } from "react-native";
 
 //Esta função espera o local do storage tipo string = ex: '@pedidos'
 export const ApagarStorage = async (localStorage) => {
@@ -7,9 +8,9 @@ export const ApagarStorage = async (localStorage) => {
 
     if (dados) {
       await AsyncStorage.removeItem(localStorage);
-      return "Carga nos pedidos ok!";
+      Alert.alert("Carga nos pedidos ok!");
     } else {
-      return "Sua lista de pedido já está vazia!";
+      Alert.alert("Sua lista de pedido já está vazia!");
     }
   } catch (error) {
     throw new Error("Não foi possivel apagar os pedidos do dia ...");
