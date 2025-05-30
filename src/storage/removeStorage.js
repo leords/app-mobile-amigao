@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Alert } from "react-native";
 
-//Esta função espera o local do storage tipo string = ex: '@pedidos'
+//função que limpa storage, espera a chave por parametro.
 export const ApagarStorage = async (localStorage) => {
   try {
     const dados = await AsyncStorage.getItem(localStorage);

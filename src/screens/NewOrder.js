@@ -12,6 +12,7 @@ import Autocomplete from "react-native-autocomplete-input";
 import { useRoute } from "@react-navigation/native";
 import { Alert } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { GpsCliente } from "../utils/CreateGPSClient";
 
 export default function Pedido() {
   const [produtos, setProdutos] = useState([]);
@@ -64,6 +65,13 @@ export default function Pedido() {
     setItensPedido(novaLista);
   };
 
+  //APENAS PARA TESTAR!
+  const ClearAllStorage = async () => {
+    await AsyncStorage.removeItem("@gps");
+    await AsyncStorage.removeItem("@pedidos");
+    await AsyncStorage.removeItem("@pedidosLineares");
+  };
+
   //Função que salva o orçamento como pedido
   const salvarPedido = async () => {
     const dataAtual = new Date();
@@ -108,8 +116,6 @@ export default function Pedido() {
       rodape,
     };
 
-    console.log("pedido Estruturado: ", pedidoFinal);
-
     //Salvando no AsyncStorage pedidos estruturados - PARA LISTAR NO APP.
     const pedidosAntigos =
       JSON.parse(await AsyncStorage.getItem("@pedidos")) || [];
@@ -118,7 +124,7 @@ export default function Pedido() {
       JSON.stringify([...pedidosAntigos, pedidoFinal])
     );
 
-    console.log("pedido Linear: ", linhaFinal);
+    await GpsCliente(pedidoFinal);
 
     //Salvando no AsyncStorage pedidos lineares - PARA PLANILHA.
     const pedidosAntigosLineares =
@@ -127,8 +133,6 @@ export default function Pedido() {
       "@pedidosLineares",
       JSON.stringify([...pedidosAntigosLineares, linhaFinal])
     );
-
-    console.log("pedidos Lineares: ", pedidosAntigosLineares);
 
     //Resetar as variaveis
     setItensPedido([]);
@@ -256,7 +260,8 @@ export default function Pedido() {
               "Confirmar Cancelar",
               "Deseja realmente cancelar o pedido?",
               [
-                { text: "Não", style: "cancel" },
+                //{ text: "Não", style: "cancel" },
+                { text: "Limpar Storages!", onPress: () => ClearAllStorage() },
                 { text: "Sim", onPress: () => navigation.navigate("Home") },
               ]
             );

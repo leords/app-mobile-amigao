@@ -5,8 +5,10 @@ import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState } from "react";
 import { ApagarStorage } from "../storage/removeStorage";
-import { format } from "date-fns";
-import { Discharge } from "../services/Discharge";
+import { DischargeOrder } from "../services/DischargeOrder";
+import { ConnectionTest } from "../services/ConnectionTest";
+import { pegarDataAtual } from "../utils/date";
+import { DischargeGPS } from "../services/DischargeGPS";
 
 export default function Communication() {
   const [pedidos, setPedidos] = useState([]);
@@ -17,13 +19,30 @@ export default function Communication() {
     buscarPedidos();
   }, []);
 
-  const pegarDataAtual = () => {
-    return format(new Date(), "dd/MM/yyyy");
-  };
-
   const buscarPedidos = async () => {
     const dados = await AsyncStorage.getItem("@pedidosLineares");
     if (dados) setPedidos(JSON.parse(dados));
+  };
+
+  const tentarEnviarPedidos = async () => {
+    const online = await ConnectionTest();
+    if (!online) {
+      Alert.alert(
+        "Sem conexão com a internet. Tente novamente assim que se conectar à internet."
+      );
+      return;
+    }
+    try {
+      // descarregando a array de pedidos
+      await DischargeOrder();
+      // descarregando a array de GPS
+      await DischargeGPS();
+
+      Alert.alert("Pedidos enviando com sucesso!");
+    } catch (error) {
+      console.log("Erro ao enviar os pedidos!", error);
+      Alert.alert("Erro ao enviar os pedidos. Tente novamente!");
+    }
   };
 
   const validarDescarga = async () => {
@@ -32,7 +51,7 @@ export default function Communication() {
       (pedido) => pedido?.[0]?.[0] ?? null === pegarDataAtual()
     );
     if (existePedido) {
-      await Discharge();
+      await tentarEnviarPedidos();
     } else {
       Alert.alert("você não tem nenhum pedido com a data de hoje");
     }
@@ -45,11 +64,13 @@ export default function Communication() {
     );
     if (existePedido) {
       await ApagarStorage("@pedidosLineares");
+      await ApagarStorage("@pedidos");
 
-      const dados2 = await AsyncStorage.getItem("@pedidosLineares");
+      const dados1 = await AsyncStorage.getItem("@pedidosLineares");
+      const dados2 = await AsyncStorage.getItem("@pedidos");
 
-      if (!dados2 || dados2 === null) {
-        Alert.alert("Carva realizada com sucesso!");
+      if (!dados1 || (dados1 === null && !dados2) || dados2 === null) {
+        Alert.alert("Sua carga foi realizada com sucesso!");
       }
     } else {
       Alert.alert(

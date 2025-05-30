@@ -7,6 +7,7 @@
     "icon": "../src/assets/logo.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "plugins": ["expo-location"],
     "splash": {
       "image": "../src/assets/logo.png",
       "resizeMode": "contain",
@@ -18,7 +19,8 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "../src/assets/logo.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#ffffff",
+        "permissions": ["ACCESS_FINE_LOCATION"]
       },
       "edgeToEdgeEnabled": true
     },

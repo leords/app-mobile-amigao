@@ -1,13 +1,13 @@
 import { Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { SendRequestSpreadsheet } from "../services/SendRequestSpreadsheet";
+import { SendRequestOrderSpreadsheet } from "./SendRequestOrderSpreadsheet";
 
-export const Discharge = async () => {
+export const DischargeOrder = async () => {
   // busca pedidos salvos no storage
   const pedidos =
     JSON.parse(await AsyncStorage.getItem("@pedidosLineares")) || [];
 
-  // separar
+  // separar pedidos
   const pedidosNaoEnviados = pedidos.filter((p) => !p.enviado);
   const pedidosEnviados = pedidos.filter((p) => p.enviado);
 
@@ -19,7 +19,7 @@ export const Discharge = async () => {
     try {
       console.log(`Enviando ${pedidosNaoEnviados.length} pedidos...`);
       // enviando para a requisição
-      await SendRequestSpreadsheet(pedidosNaoEnviados);
+      await SendRequestOrderSpreadsheet(pedidosNaoEnviados);
 
       // marca todos os pedidos do array pedidosNaoEnviados como enviados.
       const marcados = pedidosNaoEnviados.map((p) => ({
