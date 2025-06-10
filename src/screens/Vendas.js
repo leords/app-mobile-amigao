@@ -6,43 +6,39 @@ import {
   ActivityIndicator,
   Text,
 } from "react-native";
-import SaleCard from "../components/SaleCard";
+import VendaCard from "../components/VendaCard";
 import colors from "../styles/colors";
-import Header from "../components/Header";
+import Cabecalho from "../components/Cabecalho";
+import { useAuth } from "../context/AuthContext";
+import { buscarVendasDaAPI } from "../services/VendasService";
 
-export default function SalesDays() {
-  const [sales, setSales] = useState([]);
-  const [selectedIndex, setSelectedIndex] = useState(null);
+export default function Vendas() {
+  const [vendas, setVendas] = useState([]);
+  const [indexSelecionado, setIndexSelecionado] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [reload, setReload] = useState(true);
+  const [erro, setErro] = useState(null);
+  const [recarregar, setRecarregar] = useState(true);
+  const { user } = useAuth;
 
   const image = require("../assets/logo.png");
 
   useEffect(() => {
-    async function fetchVendas() {
+    const buscarVendas = async () => {
       try {
-        const res = await fetch(
-          "https://script.google.com/macros/s/AKfycbyDi80grbAAVbRxhefmI4ZUSoHyXz63Yail91NnWKQQDeWXZArA24Hko7KwHY1qYmQyzw/exec?vendedor=EMERSON"
+        await buscarVendasDaAPI(
+          user,
+          setVendas,
+          setLoading,
+          setRecarregar,
+          setErro
         );
-        const data = await res.json();
-
-        if (Array.isArray(data.saida)) {
-          setSales(data.saida);
-        } else {
-          throw new Error("Resposta da API não é um array válido");
-        }
-      } catch (err) {
-        console.error("Erro ao buscar dados:", err);
-        setError("Erro ao carregar dados");
-      } finally {
-        setLoading(false);
-        setReload(true);
+      } catch (error) {
+        console.error("Erro ao buscar as vendas:", error);
       }
-    }
+    };
 
-    fetchVendas();
-  }, [!reload]);
+    buscarVendas();
+  }, [recarregar]);
 
   if (loading) {
     return (
@@ -52,10 +48,10 @@ export default function SalesDays() {
     );
   }
 
-  if (error) {
+  if (erro) {
     return (
       <View style={styles.center}>
-        <Text style={{ color: colors.danger }}>{error}</Text>
+        <Text style={{ color: colors.danger }}>{erro}</Text>
       </View>
     );
   }
@@ -63,8 +59,8 @@ export default function SalesDays() {
   return (
     <View style={styles.container}>
       {/* onPress, icone, descriptionIcone, image */}
-      <Header
-        onPress={() => setReload(!reload)}
+      <Cabecalho
+        onPress={() => setRecarregar(!recarregar)}
         icone={
           "reload"
         } /* enviar o nome do icone a ser renderizado no header */
@@ -72,14 +68,14 @@ export default function SalesDays() {
         image={image} /* enviar a imagem */
       />
       <FlatList
-        data={sales}
+        data={vendas}
         keyExtractor={(item, index) => item.id?.toString() || index.toString()}
         renderItem={({ item, index }) => (
-          <SaleCard
+          <VendaCard
             item={item}
-            isExpanded={selectedIndex === index}
+            isExpanded={indexSelecionado === index}
             onPress={() =>
-              setSelectedIndex(index === selectedIndex ? null : index)
+              setIndexSelecionado(index === indexSelecionado ? null : index)
             }
           />
         )}

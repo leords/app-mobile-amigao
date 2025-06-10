@@ -1,17 +1,16 @@
 import { Alert } from "react-native";
+import Constants from "expo-constants";
 
-export const SendRequestGPSSpreadsheet = async (gps) => {
+export const EnviarSolicitacaoGPSPlanilha = async (gps) => {
+  const { URL_API_NOVO_GPS } = Constants.expoConfig.extra;
   try {
-    const response = await fetch(
-      "https://script.google.com/macros/s/AKfycbxQsal1q3TaFkGBKdip92BJ7pZItT36-Xl4RmQ_-LVub7_2WZHspVMt4zQO3jShkn_7yQ/exec",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ gps }),
-      }
-    );
+    const response = await fetch(URL_API_NOVO_GPS, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ gps }),
+    });
 
     const texto = await response.text();
     console.log("Resposta da planilha:", texto);

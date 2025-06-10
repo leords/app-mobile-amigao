@@ -1,13 +1,18 @@
 import { useNavigation } from "@react-navigation/native";
 import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
 
-export default function ButtonHome({ BGcolor, destinationPage, image, name }) {
-  const navigation = useNavigation();
+export default function BotaoPaginaInicio({
+  BGcolor,
+  destinationPage,
+  image,
+  name,
+}) {
+  const navegacao = useNavigation();
 
   return (
     <TouchableOpacity
       style={[styles.button, { backgroundColor: BGcolor }]}
-      onPress={() => navigation.navigate(destinationPage)}
+      onPress={() => navegacao.navigate(destinationPage)}
     >
       <View style={styles.iconWrapper}>{image}</View>
       <Text style={styles.text}>{name}</Text>

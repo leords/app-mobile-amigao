@@ -12,7 +12,13 @@ import Autocomplete from "react-native-autocomplete-input";
 import { useRoute } from "@react-navigation/native";
 import { Alert } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { GpsCliente } from "../utils/CreateGPSClient";
+import { GpsCliente } from "../utils/GeradorGPSCliente";
+import {
+  atualizarStorage,
+  buscarStorage,
+  criarCallbackAdicionarPedido,
+} from "../storage/ControladorStorage";
+import { useAuth } from "../context/AuthContext";
 
 export default function Pedido() {
   const [produtos, setProdutos] = useState([]);
@@ -23,7 +29,9 @@ export default function Pedido() {
   const [mostrarSugestoes, setMostrarSugestoes] = useState(false);
   const [formaPagamento, setFormaPagamento] = useState("A VISTA");
 
-  const navigation = useNavigation();
+  const { user } = useAuth();
+
+  const navegacao = useNavigation();
 
   const route = useRoute();
   const { cliente } = route.params;
@@ -65,23 +73,16 @@ export default function Pedido() {
     setItensPedido(novaLista);
   };
 
-  //APENAS PARA TESTAR!
-  const ClearAllStorage = async () => {
-    await AsyncStorage.removeItem("@gps");
-    await AsyncStorage.removeItem("@pedidos");
-    await AsyncStorage.removeItem("@pedidosLineares");
-  };
-
   //Função que salva o orçamento como pedido
   const salvarPedido = async () => {
     const dataAtual = new Date();
     const dataFormatada = dataAtual.toLocaleDateString("pt-BR");
 
     //Busca por API vendedor ao fazer o login
-    const vendedor = "LEONARDO";
+    //const vendedor = "LEONARDO";
 
     //Criando o cabeçalho que é padrão da planilha = data - cliente - vendedor
-    const cabecalho = [dataFormatada, cliente.Cliente, vendedor];
+    const cabecalho = [dataFormatada, cliente.Cliente, user];
 
     // ele achata os dados para uma única linha, ou seja um array inteiro de objetos em uma unica linha = [1, array1, 2, array2, ...]
     // necessario para salvar em planilhas!!!!
@@ -117,22 +118,29 @@ export default function Pedido() {
     };
 
     //Salvando no AsyncStorage pedidos estruturados - PARA LISTAR NO APP.
-    const pedidosAntigos =
-      JSON.parse(await AsyncStorage.getItem("@pedidos")) || [];
-    await AsyncStorage.setItem(
-      "@pedidos",
-      JSON.stringify([...pedidosAntigos, pedidoFinal])
-    );
+    // const pedidosAntigos =
+    //   JSON.parse(await AsyncStorage.getItem("@pedidos")) || [];
+    // await AsyncStorage.setItem(
+    //   "@pedidos",
+    //   JSON.stringify([...pedidosAntigos, pedidoFinal])
+    // );
+
+    //Salvando o AsyncStorage com a função de alta ordem!
+    const callbackPedidos = criarCallbackAdicionarPedido(pedidoFinal);
+    await atualizarStorage("@pedidos", callbackPedidos);
 
     await GpsCliente(pedidoFinal);
 
+    const callbackPedidosLineares = criarCallbackAdicionarPedido(linhaFinal);
+    await atualizarStorage("@pedidosLineares", callbackPedidosLineares);
+
     //Salvando no AsyncStorage pedidos lineares - PARA PLANILHA.
-    const pedidosAntigosLineares =
-      JSON.parse(await AsyncStorage.getItem("@pedidosLineares")) || [];
-    await AsyncStorage.setItem(
-      "@pedidosLineares",
-      JSON.stringify([...pedidosAntigosLineares, linhaFinal])
-    );
+    // const pedidosAntigosLineares =
+    //   JSON.parse(await AsyncStorage.getItem("@pedidosLineares")) || [];
+    // await AsyncStorage.setItem(
+    //   "@pedidosLineares",
+    //   JSON.stringify([...pedidosAntigosLineares, linhaFinal])
+    // );
 
     //Resetar as variaveis
     setItensPedido([]);
@@ -261,8 +269,8 @@ export default function Pedido() {
               "Deseja realmente cancelar o pedido?",
               [
                 //{ text: "Não", style: "cancel" },
-                { text: "Limpar Storages!", onPress: () => ClearAllStorage() },
-                { text: "Sim", onPress: () => navigation.navigate("Home") },
+                { text: "Não", style: "cancel" },
+                { text: "Sim", onPress: () => navegacao.navigate("Home") },
               ]
             );
           }}
@@ -309,11 +317,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 5,
+    //marginBottom: 20,
   },
   quantidade: {
     alignItems: "center",
     justifyContent: "center",
     textAlign: "center",
+    marginTop: 40,
   },
   inputText: {
     borderWidth: 1,

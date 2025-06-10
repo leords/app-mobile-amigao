@@ -1,6 +1,6 @@
-import { useNavigation } from "@react-navigation/native";
+import { useState } from "react";
+import { Login } from "../services/Login";
 import {
-  View,
   Text,
   TextInput,
   StyleSheet,
@@ -9,10 +9,29 @@ import {
   Platform,
   TouchableOpacity,
   ScrollView,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
+import { useAuth } from "../context/AuthContext";
 
 export default function LoginScreen() {
-  const navigation = useNavigation();
+  const [usuario, setUsuario] = useState();
+  const [senha, setSenha] = useState();
+  const [loading, setLoading] = useState(false);
+  const { setUser } = useAuth();
+
+  const handleLogin = async () => {
+    setLoading(true);
+    const resultado = await Login(usuario, senha);
+
+    if (resultado.status === "ok") {
+      setUser(resultado.usuario);
+      Alert.alert("Login efetuado com sucesso");
+    } else {
+      Alert.alert("Erro", resultado.message);
+    }
+    setLoading(false);
+  };
 
   return (
     <KeyboardAvoidingView
@@ -30,23 +49,29 @@ export default function LoginScreen() {
         />
 
         <TextInput
-          placeholder="Usuário"
+          placeholder="USUÁRIO"
           style={styles.input}
           placeholderTextColor="#888"
+          value={usuario}
+          onChangeText={(text) => setUsuario(text.toUpperCase())}
+          autoCapitalize="characters"
         />
         <TextInput
-          placeholder="Senha"
+          placeholder="SENHA"
           style={styles.input}
           secureTextEntry
           placeholderTextColor="#888"
+          value={senha}
+          onChangeText={(text) => setSenha(text.toUpperCase())}
+          autoCapitalize="characters"
         />
-
-        <TouchableOpacity
-          onPress={() => navigation.navigate("Home")}
-          style={styles.button}
-        >
-          <Text style={styles.buttonText}>Entrar</Text>
-        </TouchableOpacity>
+        {loading ? (
+          <ActivityIndicator size="large" color="red" marginTop="30" />
+        ) : (
+          <TouchableOpacity onPress={handleLogin} style={styles.button}>
+            <Text style={styles.buttonText}>Entrar</Text>
+          </TouchableOpacity>
+        )}
       </ScrollView>
       <Text style={styles.textFooter}>Desenvolvido por Leonardo Rodrigues</Text>
     </KeyboardAvoidingView>

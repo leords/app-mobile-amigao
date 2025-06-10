@@ -1,18 +1,33 @@
-import { View, Text, Image, StyleSheet, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  ActivityIndicator,
+  TouchableOpacity,
+} from "react-native";
 import { useState } from "react";
-import Header from "../components/Header";
+import Cabecalho from "../components/Cabecalho";
+import { useNavigation } from "@react-navigation/native";
+import Constants from "expo-constants";
 
-export default function InformationPage() {
-  const image = require("../assets/logo.png");
+export default function Informativo() {
+  const { URL_QR_CODE } = Constants.expoConfig.extra;
+  const imagem = require("../assets/logo.png");
   const [loading, setLoading] = useState(true);
+  const navigation = useNavigation();
+
+  const openLogout = () => {
+    navigation.navigate("Logout");
+  };
 
   return (
     <View style={styles.container}>
-      <Header
-        onPress={() => " "}
+      <Cabecalho
+        onPress={""}
         icone={""} /* enviar o nome do icone a ser renderizado no header */
         descriptionIcone={""} /* enviar a descrição do botão */
-        image={image} /* enviar a imagem */
+        image={imagem} /* enviar a imagem */
       />
 
       {/* DADOS EMPRESARIAIS */}
@@ -22,11 +37,13 @@ export default function InformationPage() {
           <Text style={styles.label}>Nome da empresa:</Text>
           <Text style={styles.text}>Amigão Distribuidora de Bebidas</Text>
 
-          <Text style={styles.label}>Endereço:</Text>
-          <Text style={styles.text}>Rua Pastor George Weger, 120 - Centro</Text>
+          <Text style={styles.label}>CNPJ:</Text>
+          <Text style={styles.text}>41.836.758/0001-41</Text>
 
-          <Text style={styles.label}>CEP:</Text>
-          <Text style={styles.text}>89460-144</Text>
+          <Text style={styles.label}>Endereço:</Text>
+          <Text style={styles.text}>
+            Rua Pastor George Weger, 120 - Centro, 89460-144
+          </Text>
 
           <Text style={styles.label}>Telefones:</Text>
           <Text style={styles.text}>Fixo: (47) 3622-2148</Text>
@@ -40,10 +57,10 @@ export default function InformationPage() {
 
         <View style={styles.bankingInfo}>
           <View style={styles.containerImage}>
-            {loading ? <ActivityIndicator size="small" color="black" /> : null}
+            {loading ? <ActivityIndicator size="small" color="blue" /> : null}
             <Image
               source={{
-                uri: "https://drive.google.com/uc?export=view&id=1tjbhNynG9qQZ1wqhHVMov6OdOF5VabLr",
+                uri: URL_QR_CODE,
               }} // Substitua pelo QR code
               style={styles.qrCode}
               onLoadEnd={() => setLoading(false)}
@@ -62,22 +79,32 @@ export default function InformationPage() {
           </View>
         </View>
       </View>
+      <View style={styles.sectionButton}>
+        <TouchableOpacity style={styles.button} onPress={openLogout}>
+          <Text style={styles.textButton}>Sair da minha conta</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     padding: 20,
+    height: "auto",
     backgroundColor: "#fff",
   },
   section: {
-    marginBottom: 40,
+    marginBottom: 10,
     padding: 15,
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 10,
+  },
+  sectionButton: {
+    marginTop: 20,
+    justifyContent: "center",
+    alignItems: "center",
   },
   header: {
     flexDirection: "row",
@@ -94,7 +121,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     textAlign: "center",
-    marginVertical: 5,
+    marginVertical: 1,
   },
   infoBlock: {
     marginLeft: 10,
@@ -115,7 +142,6 @@ const styles = StyleSheet.create({
   },
   containerImage: {
     width: "50%",
-    height: 200,
     alignItems: "center",
     justifyContent: "center",
     marginLeft: 30,
@@ -131,5 +157,17 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     justifyContent: "center",
     paddingLeft: 20,
+  },
+  button: {
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "red",
+    height: 40,
+    width: "80%",
+    borderRadius: 10,
+  },
+  textButton: {
+    fontSize: 16,
+    color: "white",
   },
 });

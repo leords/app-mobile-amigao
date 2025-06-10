@@ -1,8 +1,9 @@
 import { Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { SendRequestOrderSpreadsheet } from "./SendRequestOrderSpreadsheet";
+import { EnviarSolicitacaoPedidoPlanilha } from "./EnviarSolicitacaoPedidoPlanilha";
+import { salvarStorage } from "../storage/ControladorStorage";
 
-export const DischargeOrder = async () => {
+export const DescargaPedido = async () => {
   // busca pedidos salvos no storage
   const pedidos =
     JSON.parse(await AsyncStorage.getItem("@pedidosLineares")) || [];
@@ -19,7 +20,7 @@ export const DischargeOrder = async () => {
     try {
       console.log(`Enviando ${pedidosNaoEnviados.length} pedidos...`);
       // enviando para a requisição
-      await SendRequestOrderSpreadsheet(pedidosNaoEnviados);
+      await EnviarSolicitacaoPedidoPlanilha(pedidosNaoEnviados);
 
       // marca todos os pedidos do array pedidosNaoEnviados como enviados.
       const marcados = pedidosNaoEnviados.map((p) => ({
@@ -30,7 +31,8 @@ export const DischargeOrder = async () => {
       const todos = [...pedidosEnviados, ...marcados];
 
       // salvando novamente no storage de pedidosLineares todos os pedidos
-      await AsyncStorage.setItem("@pedidosLineares", JSON.stringify(todos));
+      // await AsyncStorage.setItem("@pedidosLineares", JSON.stringify(todos));
+      await salvarStorage("@pedidosLineares", todos);
       Alert.alert("Pedidos enviados com sucesso!");
     } catch (error) {
       console.error("Erro ao enviar pedidos:", error);

@@ -1,17 +1,16 @@
 import { Alert } from "react-native";
+import Constants from "expo-constants";
 
-export const SendRequestOrderSpreadsheet = async (pedidos) => {
+export const EnviarSolicitacaoPedidoPlanilha = async (pedidos) => {
+  const { URL_API_NOVO_PEDIDO } = Constants.expoConfig.extra;
   try {
-    const response = await fetch(
-      "https://script.google.com/macros/s/AKfycbwQbDJGwPblkVDTlGu0FJf3RFvaWKnWEASZQlwE3qrQRnC94GTYk6wcy-oj9m042jMf/exec",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ pedidos }),
-      }
-    );
+    const response = await fetch(URL_API_NOVO_PEDIDO, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ pedidos }),
+    });
 
     const texto = await response.text();
     Alert.alert(texto);

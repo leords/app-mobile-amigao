@@ -1,22 +1,25 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   View,
   Text,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
-  Alert,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import Header from "../components/Header";
+import Cabecalho from "../components/Cabecalho";
+import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
+import { PermissaoAcessoGaleria } from "../services/PermissaoAcessoGaleria";
+import { buscarStorage } from "../storage/ControladorStorage";
 
-export default function ListOrder() {
+export default function ListaPedido() {
   const [pedidos, setPedidos] = useState([]);
-  const image = require("../assets/logo.png");
+  const imagem = require("../assets/logo.png");
 
   useEffect(() => {
     async function carregarPedidos() {
-      const dados = await AsyncStorage.getItem("@pedidos");
+      //const dados = await AsyncStorage.getItem("@pedidos");
+      const dados = await buscarStorage("@pedidos");
       const lista = dados ? JSON.parse(dados) : [];
       setPedidos(lista);
     }
@@ -24,18 +27,33 @@ export default function ListOrder() {
     carregarPedidos();
   }, []);
 
+  const refs = useRef([]); // array de refs para os pedidos
+
+  const baixarImagem = async (index) => {
+    // ref de flatList dos pedidos.
+    const viewRef = refs.current[index];
+    // passando a viewRed para a função que valida a permissao e faz o download da imagem gerada!
+    await PermissaoAcessoGaleria(viewRef);
+  };
+
   return (
     <ScrollView style={styles.container}>
-      <Header
+      <Cabecalho
         onPress={() => " "}
         icone={""} /* enviar o nome do icone a ser renderizado no header */
         descriptionIcone={""} /* enviar a descrição do botão */
-        image={image} /* enviar a imagem */
+        image={imagem} /* enviar a imagem */
       />
 
       {pedidos.map((pedido, index) => (
-        <View key={index} style={styles.pedidoContainer}>
+        <View
+          ref={(el) => (refs.current[index] = el)}
+          collapsable={false}
+          key={index}
+          style={styles.pedidoContainer}
+        >
           <Text style={styles.NumPedido}>Nº: {index + 1}</Text>
+          <Text style={styles.empresa}>Distribuidora de bebidas Amigão</Text>
           <Text style={styles.cliente}>
             Cliente: {pedido.cabecalho?.[1] ?? "Desconhecido"}
           </Text>
@@ -58,6 +76,11 @@ export default function ListOrder() {
               TOTAL: R$ {(pedido.rodape?.[1]).toFixed(2) ?? "0,00"}
             </Text>
           </View>
+          <View style={styles.containerShare}>
+            <TouchableOpacity onPress={() => baixarImagem(index)}>
+              <FontAwesome5 name="file-download" size={20} color="black" />
+            </TouchableOpacity>
+          </View>
         </View>
       ))}
     </ScrollView>
@@ -77,6 +100,12 @@ const styles = StyleSheet.create({
     textAlign: "right",
     fontSize: 12,
     marginRight: 5,
+    color: "#494747",
+  },
+  empresa: {
+    textAlign: "left",
+    fontSize: 14,
+    marginLeft: 5,
     color: "#494747",
   },
   pedidoContainer: {
@@ -131,12 +160,17 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 20,
     flexDirection: "row",
-    justifyContent: "space-evenly",
-    paddingHorizontal: 14,
+    justifyContent: "space-between",
+    paddingHorizontal: 10,
   },
   pagamento: {
     fontSize: 13,
     fontWeight: "400",
     //color: '#494747'
+  },
+  containerShare: {
+    alignItems: "flex-end",
+    paddingHorizontal: 5,
+    paddingBottom: 5,
   },
 });

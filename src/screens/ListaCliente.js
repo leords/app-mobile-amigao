@@ -1,19 +1,23 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, FlatList, TextInput, StyleSheet } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import Header from "../components/Header";
+import Cabecalho from "../components/Cabecalho";
 import { useNavigation } from "@react-navigation/native";
 import { TouchableOpacity } from "react-native";
+import { buscarClientesDaAPI } from "../services/ClientesService";
+import { buscarStorage } from "../storage/ControladorStorage";
+import { useAuth } from "../context/AuthContext";
 
-export default function ClientPage() {
+export default function ListaCliente() {
   const [clientes, setClientes] = useState([]);
   const [busca, setBusca] = useState("");
   const [clientesFiltrados, setClientesFiltrados] = useState([]);
   const [positivados, setPositivados] = useState([]);
   const [atualizarPositivados, setAtualizarPositivados] = useState(false);
-  const navigation = useNavigation();
 
-  const image = require("../assets/clientes.png");
+  const { user } = useAuth();
+  const navegacao = useNavigation();
+
+  const imagem = require("../assets/clientes.png");
 
   useEffect(() => {
     carregarClientesLocais();
@@ -29,63 +33,24 @@ export default function ClientPage() {
 
   // função que vai criar um array com clientes que já tem pedido realizado!
   const buscarClientePositivados = async () => {
-    const dados = await AsyncStorage.getItem("@pedidos");
+    const dados = await buscarStorage("@pedidos");
     if (dados) setPositivados(JSON.parse(dados));
   };
 
   // busca clientes do AsyncStorage, caso não encontrar ele chama da API novamente.
   const carregarClientesLocais = async () => {
     try {
-      const jsonValue = await AsyncStorage.getItem("@clientes");
+      const jsonValue = await buscarStorage("@clientes");
       if (jsonValue != null) {
-        const data = JSON.parse(jsonValue);
-        setClientes(data);
+        setClientes(jsonValue);
       } else {
-        buscarClientesDaApi();
+        await buscarClientesDaAPI(user, setClientes);
       }
     } catch (e) {
       console.error("Erro ao carregar clientes locais:", e);
     }
   };
 
-  // return dias[new Date().getDay()]. new Date().getDay() = é 0 domingo, 1 segunda ...
-  const pegarDiaSemanaHoje = () => {
-    const dias = [
-      "DOMINGO",
-      "SEGUNDA",
-      "TERÇA",
-      "QUARTA",
-      "QUINTA",
-      "SEXTA",
-      "SÁBADO",
-    ];
-    return dias[new Date().getDay()];
-  };
-
-  // chamando a API do sheets conforme os parametros.
-  // OBS: precisa arrumar conforme o retorno da API de login que vai ser criada
-  const buscarClientesDaApi = async () => {
-    try {
-      const dia = pegarDiaSemanaHoje(); // chamada da função corretamente
-      const response = await fetch(
-        // `https://script.google.com/macros/s/AKfycbwTjAF9x6LuaW6gwlxwV-lIVyX5hZfbLwGQkSoPe_AhuSQFL0wo_HQ3Av4AA4Hv3c9pvA/exec?vendedor=${vendedor}&dia=${dia}`
-        `https://script.google.com/macros/s/AKfycbwTjAF9x6LuaW6gwlxwV-lIVyX5hZfbLwGQkSoPe_AhuSQFL0wo_HQ3Av4AA4Hv3c9pvA/exec?vendedor=EMERSON&dia=SEGUNDA`
-      );
-      const data = await response.json();
-
-      // verifica se data.saida é um array.
-      if (Array.isArray(data.saida)) {
-        await AsyncStorage.setItem("@clientes", JSON.stringify(data.saida));
-        setClientes(data.saida);
-      } else {
-        console.warn("Resposta inesperada:", data);
-      }
-    } catch (e) {
-      console.error("Erro ao buscar da API:", e);
-    }
-  };
-
-  // filtro que busca clientes na array de clientes.
   const filtrarClientes = () => {
     const texto = busca.toLowerCase();
     const filtrados = clientes.filter(
@@ -95,6 +60,8 @@ export default function ClientPage() {
     setClientesFiltrados(filtrados);
   };
 
+  // { item } vem do flatList, assume os itens de data.
+  // e percore o array todo com o .some, validando os itens. true ou false
   const renderItem = ({ item }) => {
     const positivou = positivados?.some(
       (pedido) => pedido?.cabecalho?.[1] === item?.Cliente
@@ -102,8 +69,9 @@ export default function ClientPage() {
 
     return (
       <TouchableOpacity
+        //valida a condição de 'positivou' para determinar qual estilo ele assumirá.
         style={[styles.item, positivou && styles.positivado]}
-        onPress={() => navigation.navigate("Order", { cliente: item })}
+        onPress={() => navegacao.navigate("Order", { cliente: item })}
       >
         <View style={styles.containerDescription}>
           <Text style={styles.nome}>{item.Cliente}</Text>
@@ -122,14 +90,14 @@ export default function ClientPage() {
 
   return (
     <View style={styles.container}>
-      <Header
+      <Cabecalho
         onPress={() => {
           // tem a mesma função que o ! porém, garante que o valor seja trocado ao clicar duas vezes muito rápido!
           setAtualizarPositivados((prev) => !prev);
         }}
         icone={"reload"} // correção no nome 'realod' se necessário
         descriptionIcone={"Atualizar"}
-        image={image}
+        image={imagem}
       />
       <TextInput
         placeholder="Buscar Cliente"

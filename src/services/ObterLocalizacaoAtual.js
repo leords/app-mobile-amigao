@@ -1,6 +1,6 @@
 import * as Location from "expo-location";
 
-export async function getCurrentLocation() {
+export async function ObterLocalizacaoAtual() {
   try {
     // Solicita permissão
     const { status } = await Location.requestForegroundPermissionsAsync();
@@ -11,11 +11,11 @@ export async function getCurrentLocation() {
     }
 
     // Obtém a localização atual
-    const location = await Location.getCurrentPositionAsync({});
+    const localizacao = await Location.getCurrentPositionAsync({});
 
     return {
-      latitude: location.coords.latitude,
-      longitude: location.coords.longitude,
+      latitude: localizacao.coords.latitude,
+      longitude: localizacao.coords.longitude,
     };
   } catch (error) {
     console.error("Erro ao obter localização:", error);

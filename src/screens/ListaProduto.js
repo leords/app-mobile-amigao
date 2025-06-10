@@ -8,14 +8,16 @@ import {
   Image,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import Header from "../components/Header";
+import Cabecalho from "../components/Cabecalho";
+import { buscarProdutosDaAPI } from "../services/ProdutosService";
+import { buscarStorage } from "../storage/ControladorStorage";
 
-export default function ProductPage() {
+export default function ListaProduto() {
   const [produtos, setProdutos] = useState([]);
   const [busca, setBusca] = useState("");
   const [produtosFiltrados, setProdutosFiltrados] = useState([]);
 
-  const image = require("../assets/vasilhames.png");
+  const imagem = require("../assets/vasilhames.png");
 
   useEffect(() => {
     carregarProdutosLocais();
@@ -27,33 +29,17 @@ export default function ProductPage() {
 
   const carregarProdutosLocais = async () => {
     try {
-      const jsonValue = await AsyncStorage.getItem("@produtos");
+      //const jsonValue = await AsyncStorage.getItem("@produtos");
+      const jsonValue = await buscarStorage("@produtos");
       if (jsonValue != null) {
         const data = JSON.parse(jsonValue);
         setProdutos(data);
       } else {
-        buscarProdutosDaApi(); // Se não houver no AsyncStorage, busca na API
+        await buscarProdutosDaAPI(setProdutos);
+        //buscarProdutosDaApi(); // Se não houver no AsyncStorage, busca na API
       }
     } catch (e) {
       console.error("Erro ao carregar produtos locais:", e);
-    }
-  };
-
-  const buscarProdutosDaApi = async () => {
-    try {
-      const response = await fetch(
-        "https://script.google.com/macros/s/AKfycbwjMFZ9wWaUEQICGpO7qPaNCtQuOLr7N9hVxDJGmffeDdNN4Odx0mdbsB0JV-oNP1H8/exec"
-      ); // Substitua pela URL correta
-      const data = await response.json();
-
-      if (Array.isArray(data.saida)) {
-        await AsyncStorage.setItem("@produtos", JSON.stringify(data.saida));
-        setProdutos(data.saida);
-      } else {
-        console.warn("Resposta inesperada:", data);
-      }
-    } catch (e) {
-      console.error("Erro ao buscar da API:", e);
     }
   };
 
@@ -84,11 +70,11 @@ export default function ProductPage() {
 
   return (
     <View style={styles.container}>
-      <Header
+      <Cabecalho
         onPress={() => " "}
         icone={""} /* enviar o nome do icone a ser renderizado no header */
         descriptionIcone={""} /* enviar a descrição do botão */
-        image={image} /* enviar a imagem */
+        image={imagem} /* enviar a imagem */
       />
       <TextInput
         placeholder="Buscar produto"

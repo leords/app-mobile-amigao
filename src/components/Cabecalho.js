@@ -3,15 +3,15 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { View, StyleSheet, Text, TouchableOpacity, Image } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 
-export default function Header({ onPress, icone, descriptionIcone, image }) {
-  const navigation = useNavigation();
+export default function Cabecalho({ onPress, icone, descriptionIcone, image }) {
+  const navegacao = useNavigation();
 
   return (
     <View style={styles.container}>
       {/* Botão voltar */}
       <TouchableOpacity
         style={styles.button}
-        onPress={() => navigation.navigate("Home")}
+        onPress={() => navegacao.navigate("Home")}
       >
         <Ionicons name="arrow-back" size={28} />
         <Text style={styles.buttonText}>Voltar</Text>

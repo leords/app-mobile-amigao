@@ -1,31 +1,32 @@
 import { TouchableOpacity, StyleSheet, View, Text, Alert } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import Header from "../components/Header";
+import Cabecalho from "../components/Cabecalho";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState } from "react";
-import { ApagarStorage } from "../storage/removeStorage";
-import { DischargeOrder } from "../services/DischargeOrder";
-import { ConnectionTest } from "../services/ConnectionTest";
-import { pegarDataAtual } from "../utils/date";
-import { DischargeGPS } from "../services/DischargeGPS";
+import { DescargaPedido } from "../services/DescargaPedido";
+import { testeConexao } from "../services/TesteConexao";
+import { pegarDataAtual } from "../utils/Data";
+import { DescargaGPS } from "../services/DescargaGPS";
+import { buscarStorage, removerStorage } from "../storage/ControladorStorage";
 
-export default function Communication() {
+export default function Sincronizacao() {
   const [pedidos, setPedidos] = useState([]);
-  const navigation = useNavigation();
-  const image = require("../assets/logo.png");
+  const navegacao = useNavigation();
+  const imagem = require("../assets/logo.png");
 
   useEffect(() => {
     buscarPedidos();
   }, []);
 
   const buscarPedidos = async () => {
-    const dados = await AsyncStorage.getItem("@pedidosLineares");
-    if (dados) setPedidos(JSON.parse(dados));
+    const dados = buscarStorage("@pedidosLineares");
+    if (dados) setPedidos(dados);
   };
 
+  // Está função valida a conexao e faz as descargas de GPS e pedido.
   const tentarEnviarPedidos = async () => {
-    const online = await ConnectionTest();
+    const online = await testeConexao();
     if (!online) {
       Alert.alert(
         "Sem conexão com a internet. Tente novamente assim que se conectar à internet."
@@ -33,10 +34,10 @@ export default function Communication() {
       return;
     }
     try {
-      // descarregando a array de pedidos
-      await DischargeOrder();
-      // descarregando a array de GPS
-      await DischargeGPS();
+      // Descarrega o array de pedidos.
+      await DescargaPedido();
+      // Descarrega o array de GPS.
+      await DescargaGPS();
 
       Alert.alert("Pedidos enviando com sucesso!");
     } catch (error) {
@@ -45,8 +46,8 @@ export default function Communication() {
     }
   };
 
+  // essa função valida se dentro do array tem algum item com a data igual a atual e retorna true!
   const validarDescarga = async () => {
-    console.log(pedidos);
     const existePedido = pedidos.some(
       (pedido) => pedido?.[0]?.[0] ?? null === pegarDataAtual()
     );
@@ -57,17 +58,19 @@ export default function Communication() {
     }
   };
 
+  // essa função valida a carga de pedidos.
   const validarCarga = async () => {
     const existePedido = pedidos.some(
-      //como é um array dentro um array = bidimensional
+      //como é um array dentro um array = é um array bidimensional
       (pedido) => pedido?.[0]?.[0] ?? null === pegarDataAtual()
     );
     if (existePedido) {
-      await ApagarStorage("@pedidosLineares");
-      await ApagarStorage("@pedidos");
+      // faz interações com o storage.
+      await removerStorage("@pedidosLineares");
+      await removerStorage("@pedidos");
 
-      const dados1 = await AsyncStorage.getItem("@pedidosLineares");
-      const dados2 = await AsyncStorage.getItem("@pedidos");
+      const dados1 = await buscarStorage("@pedidosLineares");
+      const dados2 = await buscarStorage("@pedidos");
 
       if (!dados1 || (dados1 === null && !dados2) || dados2 === null) {
         Alert.alert("Sua carga foi realizada com sucesso!");
@@ -81,13 +84,13 @@ export default function Communication() {
 
   return (
     <View style={styles.container}>
-      <Header
+      <Cabecalho
         onPress={() => {
-          navigation.navigate("Home");
+          navegacao.navigate("Home");
         }}
         icone={""} // correção no nome 'realod' se necessário
         descriptionIcone={""}
-        image={image}
+        image={imagem}
       />
       <View style={styles.containerButton}>
         <TouchableOpacity

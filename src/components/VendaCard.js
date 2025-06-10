@@ -2,7 +2,7 @@ import React from "react";
 import colors from "../styles/colors";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 
-export default function SaleCard({ item, isExpanded, onPress }) {
+export default function VendaCard({ item, isExpanded, onPress }) {
   // Formatando a data
   const formatDate = (dateStr) => {
     const date = new Date(dateStr);

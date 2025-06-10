@@ -1,8 +1,9 @@
 import { Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { SendRequestGPSSpreadsheet } from "./sendRequestGPSSpreadsheet";
+import { EnviarSolicitacaoGPSPlanilha } from "./EnviarSolicitacaoGPSPlanilha";
+import { salvarStorage } from "../storage/ControladorStorage";
 
-export const DischargeGPS = async () => {
+export const DescargaGPS = async () => {
   // busca pedidos salvos no storage
   const listGPS = JSON.parse(await AsyncStorage.getItem("@gps")) || [];
 
@@ -15,7 +16,7 @@ export const DischargeGPS = async () => {
     try {
       console.log(`Enviando ${GPSNaoEnviados.length} pedidos...`);
       // enviando para a requisição
-      await SendRequestGPSSpreadsheet(GPSNaoEnviados);
+      await EnviarSolicitacaoGPSPlanilha(GPSNaoEnviados);
 
       // marca todos os pedidos do array pedidosNaoEnviados como enviados.
       const marcados = GPSNaoEnviados.map((p) => ({
@@ -26,7 +27,10 @@ export const DischargeGPS = async () => {
       const todos = [...GPSEnviados, ...marcados];
 
       // salvando novamente no storage de pedidosLineares todos os pedidos
-      await AsyncStorage.setItem("@gps", JSON.stringify(todos));
+      //await AsyncStorage.setItem("@gps", JSON.stringify(todos));
+
+      await salvarStorage("@gps", todos);
+
       Alert.alert("Pedidos enviados com sucesso!");
     } catch (error) {
       console.error("Erro ao enviar GPS:", error);

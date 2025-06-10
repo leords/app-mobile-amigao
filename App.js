@@ -1,13 +1,14 @@
 // App.js
-import { SafeAreaView, StatusBar } from 'react-native';
-import { AppRoutes } from './src/navigation/AppRoutes';
+import { SafeAreaView, StatusBar } from "react-native";
+import { AppNavigator } from "./src/navigation/AppNavigator";
+import { AuthProvider } from "./src/context/AuthContext";
 
 export default function App() {
   return (
-    <SafeAreaView style={{ flex: 1, paddingTop: StatusBar.currentHeight }}>
-      
-      <AppRoutes />
-
-    </SafeAreaView>
+    <AuthProvider>
+      <SafeAreaView style={{ flex: 1, paddingTop: StatusBar.currentHeight }}>
+        <AppNavigator />
+      </SafeAreaView>
+    </AuthProvider>
   );
 }
