@@ -10,5 +10,6 @@ export default ({ config }) => ({
     URL_PRODUTOS: process.env.URL_PRODUTOS,
     URL_QR_CODE: process.env.URL_QR_CODE,
     URL_API_VENDAS: process.env.URL_API_VENDAS,
+    URL_API_PEDIDOS_DELETADOS: process.env.URL_API_PEDIDOS_DELETADOS,
   },
 });

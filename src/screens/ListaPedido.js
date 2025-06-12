@@ -1,16 +1,9 @@
 import React, { useEffect, useState, useRef } from "react";
-import {
-  View,
-  Text,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-} from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { ScrollView, StyleSheet } from "react-native";
 import Cabecalho from "../components/Cabecalho";
-import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import { PermissaoAcessoGaleria } from "../services/PermissaoAcessoGaleria";
 import { buscarStorage } from "../storage/ControladorStorage";
+import PedidoCard from "../components/PedidoCard";
 
 export default function ListaPedido() {
   const [pedidos, setPedidos] = useState([]);
@@ -18,10 +11,8 @@ export default function ListaPedido() {
 
   useEffect(() => {
     async function carregarPedidos() {
-      //const dados = await AsyncStorage.getItem("@pedidos");
       const dados = await buscarStorage("@pedidos");
-      const lista = dados ? JSON.parse(dados) : [];
-      setPedidos(lista);
+      setPedidos(dados);
     }
 
     carregarPedidos();
@@ -30,6 +21,7 @@ export default function ListaPedido() {
   const refs = useRef([]); // array de refs para os pedidos
 
   const baixarImagem = async (index) => {
+    console.log("entrei na baixar imagem");
     // ref de flatList dos pedidos.
     const viewRef = refs.current[index];
     // passando a viewRed para a função que valida a permissao e faz o download da imagem gerada!
@@ -37,78 +29,32 @@ export default function ListaPedido() {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.scrollContainer}>
       <Cabecalho
         onPress={() => " "}
-        icone={""} /* enviar o nome do icone a ser renderizado no header */
-        descriptionIcone={""} /* enviar a descrição do botão */
-        image={imagem} /* enviar a imagem */
+        icone={""}
+        descriptionIcone={""}
+        image={imagem}
       />
 
       {pedidos.map((pedido, index) => (
-        <View
-          ref={(el) => (refs.current[index] = el)}
-          collapsable={false}
-          key={index}
-          style={styles.pedidoContainer}
-        >
-          <Text style={styles.NumPedido}>Nº: {index + 1}</Text>
-          <Text style={styles.empresa}>Distribuidora de bebidas Amigão</Text>
-          <Text style={styles.cliente}>
-            Cliente: {pedido.cabecalho?.[1] ?? "Desconhecido"}
-          </Text>
-
-          {Array.isArray(pedido.itensPedido) &&
-            pedido.itensPedido.map((item, i) => (
-              <View key={i} style={styles.itemRow}>
-                <Text style={styles.col1}>{item.quantidade}</Text>
-                <Text style={styles.col2}>{item.nome}</Text>
-                <Text style={styles.col3}>R$ {item.preco.toFixed(2)}</Text>
-                <Text style={styles.col4}>R$ {item.total.toFixed(2)}</Text>
-              </View>
-            ))}
-
-          <View style={styles.resumo}>
-            <Text style={styles.pagamento}>
-              PAGAMENTO: {pedido.rodape?.[3] ?? "Não informado"}
-            </Text>
-            <Text style={styles.pagamento}>
-              TOTAL: R$ {(pedido.rodape?.[1]).toFixed(2) ?? "0,00"}
-            </Text>
-          </View>
-          <View style={styles.containerShare}>
-            <TouchableOpacity onPress={() => baixarImagem(index)}>
-              <FontAwesome5 name="file-download" size={20} color="black" />
-            </TouchableOpacity>
-          </View>
-        </View>
+        <PedidoCard
+          key={`${pedido.rodape?.[1] ?? 0}-${index}`}
+          pedido={pedido}
+          index={index}
+          refs={refs}
+          baixarImagem={baixarImagem}
+        />
       ))}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  scrollContainer: {
     padding: 10,
   },
-  reset: {
-    color: "red",
-    fontWeight: "bold",
-    marginBottom: 16,
-  },
-  NumPedido: {
-    textAlign: "right",
-    fontSize: 12,
-    marginRight: 5,
-    color: "#494747",
-  },
-  empresa: {
-    textAlign: "left",
-    fontSize: 14,
-    marginLeft: 5,
-    color: "#494747",
-  },
-  pedidoContainer: {
+  pedidoBox: {
     marginBottom: 24,
     borderRadius: 10,
     borderWidth: 1,
@@ -116,60 +62,122 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: "white",
   },
-  cliente: {
-    fontSize: 15,
-    fontWeight: "500",
+  pedidoHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: 10,
     marginBottom: 30,
-    marginTop: 20,
-    textAlign: "left",
-    marginLeft: 20,
   },
-  itemRow: {
+  numeroPedido: {
+    fontSize: 12,
+    textAlign: "right",
+    color: "#494747",
+  },
+  tituloNota: {
+    textAlign: "center",
+    fontSize: 15,
+    fontWeight: "bold",
+    color: "#494747",
+    marginBottom: 4,
+  },
+  nomeEmpresa: {
+    textAlign: "center",
+    fontSize: 14,
+    color: "#494747",
+  },
+  cnpj: {
+    textAlign: "center",
+    fontSize: 12,
+    color: "#494747",
+  },
+  endereco: {
+    textAlign: "center",
+    fontSize: 10,
+    color: "#494646",
+    marginTop: 10,
+    borderBottomWidth: 1,
+    paddingBottom: 20,
+    borderColor: "#cccbcb",
+  },
+  titulosColunas: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  infoColunas: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    borderBottomWidth: 1,
+    borderColor: "#cccbcb",
+    marginBottom: 10,
+  },
+  colunaLabel: {
+    fontSize: 10,
+    marginVertical: 10,
+    marginHorizontal: 5,
+    color: "#494646",
+  },
+  infoColuna: {
+    fontSize: 12,
+    fontWeight: "500",
+    marginBottom: 10,
+    marginHorizontal: 5,
+  },
+  tabelaTitulos: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 10,
+  },
+  colunaTitulo: {
+    fontSize: 8,
+    paddingHorizontal: 5,
+    color: "#494646",
+  },
+  itemLinha: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 10,
     width: "100%",
-    borderWidth: 1,
-    borderRadius: 3,
-    borderColor: "#eee6e6",
     padding: 4,
   },
-  col1: {
+  itemQtd: {
     fontSize: 12,
     width: "5%",
     color: "#494747",
   },
-  col2: {
-    width: "50%",
+  itemNome: {
     fontSize: 12,
+    width: "50%",
     color: "#494747",
   },
-  col3: {
+  itemPreco: {
     fontSize: 12,
     width: "18%",
     textAlign: "right",
     color: "#494747",
   },
-  col4: {
+  itemTotal: {
     fontSize: 12,
     width: "20%",
     textAlign: "right",
     color: "#494747",
   },
-  resumo: {
+  resumoPedido: {
     marginTop: 20,
     marginBottom: 20,
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingHorizontal: 10,
+    paddingHorizontal: 5,
+    borderTopWidth: 1,
+    borderColor: "#cccbcb",
+    paddingTop: 10,
   },
-  pagamento: {
-    fontSize: 13,
-    fontWeight: "400",
-    //color: '#494747'
+  resumoTexto: {
+    fontSize: 12,
+    color: "#494747",
   },
-  containerShare: {
-    alignItems: "flex-end",
+  acoesPedido: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     paddingHorizontal: 5,
     paddingBottom: 5,
   },

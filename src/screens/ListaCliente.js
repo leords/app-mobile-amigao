@@ -41,7 +41,7 @@ export default function ListaCliente() {
   const carregarClientesLocais = async () => {
     try {
       const jsonValue = await buscarStorage("@clientes");
-      if (jsonValue != null) {
+      if (jsonValue && jsonValue.length > 0) {
         setClientes(jsonValue);
       } else {
         await buscarClientesDaAPI(user, setClientes);

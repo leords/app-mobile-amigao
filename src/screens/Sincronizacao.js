@@ -69,6 +69,9 @@ export default function Sincronizacao() {
       await removerStorage("@pedidosLineares");
       await removerStorage("@pedidos");
 
+      // apagar CLIENTES
+      // apagar PEDIDOS DELETADOS
+
       const dados1 = await buscarStorage("@pedidosLineares");
       const dados2 = await buscarStorage("@pedidos");
 

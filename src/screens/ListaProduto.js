@@ -29,14 +29,11 @@ export default function ListaProduto() {
 
   const carregarProdutosLocais = async () => {
     try {
-      //const jsonValue = await AsyncStorage.getItem("@produtos");
       const jsonValue = await buscarStorage("@produtos");
       if (jsonValue != null) {
-        const data = JSON.parse(jsonValue);
-        setProdutos(data);
+        setProdutos(jsonValue);
       } else {
         await buscarProdutosDaAPI(setProdutos);
-        //buscarProdutosDaApi(); // Se não houver no AsyncStorage, busca na API
       }
     } catch (e) {
       console.error("Erro ao carregar produtos locais:", e);

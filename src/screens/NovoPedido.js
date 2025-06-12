@@ -116,33 +116,18 @@ export default function Pedido() {
       itensPedido,
       rodape,
     };
-
-    //Salvando no AsyncStorage pedidos estruturados - PARA LISTAR NO APP.
-    // const pedidosAntigos =
-    //   JSON.parse(await AsyncStorage.getItem("@pedidos")) || [];
-    // await AsyncStorage.setItem(
-    //   "@pedidos",
-    //   JSON.stringify([...pedidosAntigos, pedidoFinal])
-    // );
-
-    //Salvando o AsyncStorage com a função de alta ordem!
+    //atualizando o storage, +1 pedido
     const callbackPedidos = criarCallbackAdicionarPedido(pedidoFinal);
     await atualizarStorage("@pedidos", callbackPedidos);
 
+    //coletando as coordenadas
     await GpsCliente(pedidoFinal);
 
+    //atualizando o storage, +1 pedido
     const callbackPedidosLineares = criarCallbackAdicionarPedido(linhaFinal);
     await atualizarStorage("@pedidosLineares", callbackPedidosLineares);
 
-    //Salvando no AsyncStorage pedidos lineares - PARA PLANILHA.
-    // const pedidosAntigosLineares =
-    //   JSON.parse(await AsyncStorage.getItem("@pedidosLineares")) || [];
-    // await AsyncStorage.setItem(
-    //   "@pedidosLineares",
-    //   JSON.stringify([...pedidosAntigosLineares, linhaFinal])
-    // );
-
-    //Resetar as variaveis
+    //Reseta as variaveis
     setItensPedido([]);
     setProdutoQuery("");
     setProdutoSelecionado(null);
