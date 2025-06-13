@@ -21,7 +21,6 @@ export default function ListaPedido() {
   const refs = useRef([]); // array de refs para os pedidos
 
   const baixarImagem = async (index) => {
-    console.log("entrei na baixar imagem");
     // ref de flatList dos pedidos.
     const viewRef = refs.current[index];
     // passando a viewRed para a função que valida a permissao e faz o download da imagem gerada!

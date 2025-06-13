@@ -26,6 +26,7 @@ export default function VendaCard({ item, isExpanded, onPress }) {
       </Text>
       <Text style={styles.orders}>Total de {item.Quantidade} pedidos</Text>
 
+      {/* ao clicar no pedido, expande tamanho para as informações abaixo. */}
       {isExpanded && (
         <View>
           <View style={styles.divider} />

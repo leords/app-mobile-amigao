@@ -18,7 +18,7 @@ export default function Vendas() {
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState(null);
   const [recarregar, setRecarregar] = useState(true);
-  const { user } = useAuth;
+  const { user } = useAuth();
 
   const image = require("../assets/logo.png");
 
@@ -58,14 +58,11 @@ export default function Vendas() {
 
   return (
     <View style={styles.container}>
-      {/* onPress, icone, descriptionIcone, image */}
       <Cabecalho
         onPress={() => setRecarregar(!recarregar)}
-        icone={
-          "reload"
-        } /* enviar o nome do icone a ser renderizado no header */
-        descriptionIcone={"Atualizar"} /* enviar a descrição do botão */
-        image={image} /* enviar a imagem */
+        icone={"reload"}
+        descriptionIcone={"Atualizar"}
+        image={image}
       />
       <FlatList
         data={vendas}

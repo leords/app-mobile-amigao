@@ -5,6 +5,7 @@ import { removerPedidoPorIndiceDoStorage } from "../storage/ControladorStorage";
 
 export default function PedidoCard({ pedido, index, refs, baixarImagem }) {
   const apagarPedido = async (index) => {
+    //console.log(index);
     if (index) {
       await removerPedidoPorIndiceDoStorage(index);
 

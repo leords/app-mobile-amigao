@@ -1,7 +1,7 @@
 import { Alert } from "react-native";
 import Constants from "expo-constants";
 
-export const EnviarSolicitacaoPedidoPlanilha = async (pedidos) => {
+export const EnviarSolicitacaoApagarPedidoPlanilha = async (pedidos) => {
   const { URL_API_PEDIDOS_DELETADOS } = Constants.expoConfig.extra;
   try {
     const response = await fetch(URL_API_PEDIDOS_DELETADOS, {

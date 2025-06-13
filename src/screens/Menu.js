@@ -3,11 +3,9 @@ import AntDesign from "@expo/vector-icons/AntDesign";
 import Entypo from "@expo/vector-icons/Entypo";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import BotaoPaginaInicio from "../components/BotaoPaginaInicio";
-import { useAuth } from "../context/AuthContext";
 
 export default function Menu() {
   const image = require("../assets/logo_name_horizontal.png");
-  const { user } = useAuth();
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -51,7 +49,6 @@ export default function Menu() {
           name={"Comunicação"}
         />
       </View>
-      <Text>{user}</Text>
     </View>
   );
 }

@@ -1,4 +1,3 @@
-import { buscarStorage } from "../storage/ControladorStorage";
 import Constants from "expo-constants";
 
 export const buscarVendasDaAPI = async (
@@ -10,12 +9,7 @@ export const buscarVendasDaAPI = async (
 ) => {
   const { URL_API_VENDAS } = Constants.expoConfig.extra;
 
-  const userStorage = await buscarStorage("@user");
-
   try {
-    console.log("Usuario logado: ", vendedor);
-    console.log("Usuario Storage: ", userStorage);
-
     const response = await fetch(URL_API_VENDAS, {
       method: "POST",
       headers: {
@@ -25,7 +19,6 @@ export const buscarVendasDaAPI = async (
     });
 
     const data = await response.json();
-    console.log("Resposta da API", data);
 
     if (Array.isArray(data.saida)) {
       setvendas(data.saida);

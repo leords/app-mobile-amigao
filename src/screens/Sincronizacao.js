@@ -1,17 +1,25 @@
-import { TouchableOpacity, StyleSheet, View, Text, Alert } from "react-native";
+import {
+  TouchableOpacity,
+  StyleSheet,
+  View,
+  Text,
+  Alert,
+  ActivityIndicator,
+} from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import Cabecalho from "../components/Cabecalho";
 import { useNavigation } from "@react-navigation/native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState } from "react";
 import { DescargaPedido } from "../services/DescargaPedido";
 import { testeConexao } from "../services/TesteConexao";
 import { pegarDataAtual } from "../utils/Data";
 import { DescargaGPS } from "../services/DescargaGPS";
-import { buscarStorage, removerStorage } from "../storage/ControladorStorage";
+import { buscarStorage } from "../storage/ControladorStorage";
+import { limparStorageComCarga } from "../services/limparStorageComCarga";
 
 export default function Sincronizacao() {
   const [pedidos, setPedidos] = useState([]);
+  const [loading, setLoading] = useState(false);
   const navegacao = useNavigation();
   const imagem = require("../assets/logo.png");
 
@@ -60,29 +68,8 @@ export default function Sincronizacao() {
 
   // essa função valida a carga de pedidos.
   const validarCarga = async () => {
-    const existePedido = pedidos.some(
-      //como é um array dentro um array = é um array bidimensional
-      (pedido) => pedido?.[0]?.[0] ?? null === pegarDataAtual()
-    );
-    if (existePedido) {
-      // faz interações com o storage.
-      await removerStorage("@pedidosLineares");
-      await removerStorage("@pedidos");
-
-      // apagar CLIENTES
-      // apagar PEDIDOS DELETADOS
-
-      const dados1 = await buscarStorage("@pedidosLineares");
-      const dados2 = await buscarStorage("@pedidos");
-
-      if (!dados1 || (dados1 === null && !dados2) || dados2 === null) {
-        Alert.alert("Sua carga foi realizada com sucesso!");
-      }
-    } else {
-      Alert.alert(
-        "Não é possivel fazer a carga no momento, você tem pedidos com a data de hoje!"
-      );
-    }
+    console.log("chamei validarCarga");
+    await limparStorageComCarga(setLoading);
   };
 
   return (
@@ -95,41 +82,45 @@ export default function Sincronizacao() {
         descriptionIcone={""}
         image={imagem}
       />
-      <View style={styles.containerButton}>
-        <TouchableOpacity
-          style={[styles.button, { backgroundColor: "#5dc770" }]}
-          onPress={() => {
-            Alert.alert("Confirmar Carga", "Deseja realmente dar carga?", [
-              { text: "Não", style: "cancel" },
-              { text: "Sim", onPress: () => validarCarga() },
-            ]);
-          }}
-        >
-          <View style={styles.icone}>
-            <Ionicons name="cloud-upload-outline" size={55} color="white" />
-          </View>
-          <Text style={styles.text}>Carregar</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.button, { backgroundColor: "#2498e8" }]}
-          onPress={() => {
-            Alert.alert(
-              "Confirmar Descarga",
-              "Deseja realmente dar descarga?",
-              [
+      {loading ? (
+        <ActivityIndicator size="large" color="red" marginTop="30" />
+      ) : (
+        <View style={styles.containerButton}>
+          <TouchableOpacity
+            style={[styles.button, { backgroundColor: "#5dc770" }]}
+            onPress={() => {
+              Alert.alert("Confirmar Carga", "Deseja realmente dar carga?", [
                 { text: "Não", style: "cancel" },
-                { text: "Sim", onPress: () => validarDescarga() },
-              ]
-            );
-          }}
-        >
-          <View styles={styles.icone}>
-            <Ionicons name="cloud-download-outline" size={55} color="white" />
-          </View>
-          <Text style={styles.text}>Descarregar</Text>
-        </TouchableOpacity>
-      </View>
+                { text: "Sim", onPress: () => validarCarga() },
+              ]);
+            }}
+          >
+            <View style={styles.icone}>
+              <Ionicons name="cloud-upload-outline" size={55} color="white" />
+            </View>
+            <Text style={styles.text}>Carregar</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.button, { backgroundColor: "#2498e8" }]}
+            onPress={() => {
+              Alert.alert(
+                "Confirmar Descarga",
+                "Deseja realmente dar descarga?",
+                [
+                  { text: "Não", style: "cancel" },
+                  { text: "Sim", onPress: () => validarDescarga() },
+                ]
+              );
+            }}
+          >
+            <View styles={styles.icone}>
+              <Ionicons name="cloud-download-outline" size={55} color="white" />
+            </View>
+            <Text style={styles.text}>Descarregar</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 }

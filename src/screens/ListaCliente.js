@@ -6,6 +6,8 @@ import { TouchableOpacity } from "react-native";
 import { buscarClientesDaAPI } from "../services/ClientesService";
 import { buscarStorage } from "../storage/ControladorStorage";
 import { useAuth } from "../context/AuthContext";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback } from "react";
 
 export default function ListaCliente() {
   const [clientes, setClientes] = useState([]);
@@ -19,9 +21,12 @@ export default function ListaCliente() {
 
   const imagem = require("../assets/clientes.png");
 
-  useEffect(() => {
-    carregarClientesLocais();
-  }, []);
+  // Isso garante que mesmo que a tela já foi montada a função seja chamada, assim que a tela seja o foco. Então sempre que abrir a tela essa função será chamada!!!
+  useFocusEffect(
+    useCallback(() => {
+      carregarClientesLocais();
+    }, [])
+  );
 
   useEffect(() => {
     filtrarClientes();

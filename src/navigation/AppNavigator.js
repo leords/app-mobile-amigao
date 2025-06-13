@@ -13,21 +13,14 @@ export const AppNavigator = () => {
 
   useEffect(() => {
     const checkUser = async () => {
-      // busca o storaged de usuarios
-      //const storedUser = await AsyncStorage.getItem("@user");
       const storedUser = await buscarStorage("@user");
-      console.log("Usuário do storage: ", storedUser);
       // valida a existencia
       if (storedUser !== null) {
-        // seta em user já no tipo JSON
         setUser(storedUser);
-        console.log("user is:", user);
         setLoading(false);
       } else {
         setLoading(false);
       }
-      // validado ele cancela o loading
-      //setLoading(false);
     };
     checkUser();
   }, []);
