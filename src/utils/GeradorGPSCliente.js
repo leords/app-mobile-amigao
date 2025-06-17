@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ObterLocalizacaoAtual } from "../services/ObterLocalizacaoAtual";
-import { dataFormatada } from "./Data";
+import { dataHoraFormatada } from "./Data";
 
 export const GpsCliente = async (pedidoFinal) => {
   try {
@@ -20,7 +20,7 @@ export const GpsCliente = async (pedidoFinal) => {
       nomeCliente,
       localizacao.latitude,
       localizacao.longitude,
-      dataFormatada(),
+      dataHoraFormatada(),
     ];
 
     //pegando os dados do storage de gps

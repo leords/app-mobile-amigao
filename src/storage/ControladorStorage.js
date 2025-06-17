@@ -41,6 +41,9 @@ export const removerStorage = async (chave) => {
 // E isso funciona porque a função interna ainda "lembra" do `itens` que foi passado anteriormente.
 
 export const criarCallbackAdicionarPedido = (novoPedido) => {
+  if (novoPedido instanceof Promise) {
+    throw new Error("Não é permitido adicionar uma Promise ao storage.");
+  }
   return (listaAtual) => [...listaAtual, novoPedido];
 };
 
@@ -58,6 +61,7 @@ export const removerPedidoPorIndiceDoStorage = async (indice) => {
   try {
     const pedidos = await buscarStorage("@pedidos");
     const pedidosLineares = await buscarStorage("@pedidosLineares");
+    console.log("Lineares", pedidosLineares);
 
     if (!pedidos || pedidos.length === 0) {
       console.log("Nenhum pedido encontrado.");

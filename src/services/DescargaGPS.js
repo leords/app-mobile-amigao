@@ -27,8 +27,6 @@ export const DescargaGPS = async () => {
       const todos = [...GPSEnviados, ...marcados];
 
       // salvando novamente no storage de pedidosLineares todos os pedidos
-      //await AsyncStorage.setItem("@gps", JSON.stringify(todos));
-
       await salvarStorage("@gps", todos);
 
       Alert.alert("Pedidos enviados com sucesso!");

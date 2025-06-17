@@ -28,7 +28,7 @@ export default function Sincronizacao() {
   }, []);
 
   const buscarPedidos = async () => {
-    const dados = buscarStorage("@pedidosLineares");
+    const dados = await buscarStorage("@pedidosLineares");
     if (dados) setPedidos(dados);
   };
 
@@ -56,10 +56,13 @@ export default function Sincronizacao() {
 
   // essa função valida se dentro do array tem algum item com a data igual a atual e retorna true!
   const validarDescarga = async () => {
+    console.log("Entrou no valida descarga");
     const existePedido = pedidos.some(
       (pedido) => pedido?.[0]?.[0] ?? null === pegarDataAtual()
     );
+    console.log("validacao: ", existePedido);
     if (existePedido) {
+      console.log("Entrou no existePedido");
       await tentarEnviarPedidos();
     } else {
       Alert.alert("você não tem nenhum pedido com a data de hoje");
@@ -68,7 +71,6 @@ export default function Sincronizacao() {
 
   // essa função valida a carga de pedidos.
   const validarCarga = async () => {
-    console.log("chamei validarCarga");
     await limparStorageComCarga(setLoading);
   };
 

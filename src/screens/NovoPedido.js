@@ -78,9 +78,6 @@ export default function Pedido() {
     const dataAtual = new Date();
     const dataFormatada = dataAtual.toLocaleDateString("pt-BR");
 
-    //Busca por API vendedor ao fazer o login
-    //const vendedor = "LEONARDO";
-
     //Criando o cabeçalho que é padrão da planilha = data - cliente - vendedor
     const cabecalho = [dataFormatada, cliente.Cliente, user];
 
@@ -116,6 +113,7 @@ export default function Pedido() {
       itensPedido,
       rodape,
     };
+
     //atualizando o storage, +1 pedido
     const callbackPedidos = criarCallbackAdicionarPedido(pedidoFinal);
     await atualizarStorage("@pedidos", callbackPedidos);

@@ -14,7 +14,8 @@ export default function ListaCliente() {
   const [busca, setBusca] = useState("");
   const [clientesFiltrados, setClientesFiltrados] = useState([]);
   const [positivados, setPositivados] = useState([]);
-  const [atualizarPositivados, setAtualizarPositivados] = useState(false);
+  const [atualizarPositivacao, setAtualizarPositivacao] = useState(false);
+  const [corPositivao, setCorPositivacao] = useState();
 
   const { user } = useAuth();
   const navegacao = useNavigation();
@@ -32,14 +33,31 @@ export default function ListaCliente() {
     filtrarClientes();
   }, [busca, clientes]);
 
-  useEffect(() => {
-    buscarClientePositivados();
-  }, [atualizarPositivados]);
+  useFocusEffect(
+    useCallback(() => {
+      buscarClientePositivados();
+    }, [])
+  );
 
   // função que vai criar um array com clientes que já tem pedido realizado!
   const buscarClientePositivados = async () => {
     const dados = await buscarStorage("@pedidos");
-    if (dados) setPositivados(JSON.parse(dados));
+    setPositivados(dados);
+    const clientes = await buscarStorage("@clientes");
+
+    const resultado = dados.length / clientes.length;
+
+    const cor = resultado < 3 ? "red" : resultado < 7 ? "orange" : "green";
+
+    // formatando número decimal para porcentagem.
+    const formatado = new Intl.NumberFormat("pt-BR", {
+      style: "percent",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(resultado);
+
+    setAtualizarPositivacao(formatado);
+    setCorPositivacao(cor);
   };
 
   // busca clientes do AsyncStorage, caso não encontrar ele chama da API novamente.
@@ -98,7 +116,7 @@ export default function ListaCliente() {
       <Cabecalho
         onPress={() => {
           // tem a mesma função que o ! porém, garante que o valor seja trocado ao clicar duas vezes muito rápido!
-          setAtualizarPositivados((prev) => !prev);
+          //setAtualizarPositivados((prev) => !prev);
         }}
         icone={"reload"} // correção no nome 'realod' se necessário
         descriptionIcone={"Atualizar"}
@@ -110,6 +128,12 @@ export default function ListaCliente() {
         onChangeText={setBusca}
         style={styles.input}
       />
+      <View style={styles.containerPositivacao}>
+        <Text style={styles.titlePositivacao}>Positivação do dia: </Text>
+        <Text style={[styles.positivacao, { color: corPositivao }]}>
+          {atualizarPositivacao}
+        </Text>
+      </View>
       <FlatList
         style={styles.list}
         data={clientesFiltrados}
@@ -184,5 +208,20 @@ const styles = StyleSheet.create({
   },
   positivado: {
     backgroundColor: "#5dc770",
+  },
+  containerPositivacao: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  titlePositivacao: {
+    textAlign: "center",
+    fontSize: 14,
+  },
+  positivacao: {
+    textAlign: "center",
+    fontSize: 16,
+    marginLeft: 4,
+    fontWeight: 600,
   },
 });

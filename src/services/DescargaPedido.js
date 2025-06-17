@@ -1,12 +1,11 @@
 import { Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { EnviarSolicitacaoPedidoPlanilha } from "./EnviarSolicitacaoPedidoPlanilha";
-import { salvarStorage } from "../storage/ControladorStorage";
+import { buscarStorage, salvarStorage } from "../storage/ControladorStorage";
 
 export const DescargaPedido = async () => {
   // busca pedidos salvos no storage
-  const pedidos =
-    JSON.parse(await AsyncStorage.getItem("@pedidosLineares")) || [];
+  const pedidos = await buscarStorage("@pedidosLineares");
 
   // separar pedidos
   const pedidosNaoEnviados = pedidos.filter((p) => !p.enviado);
@@ -31,7 +30,6 @@ export const DescargaPedido = async () => {
       const todos = [...pedidosEnviados, ...marcados];
 
       // salvando novamente no storage de pedidosLineares todos os pedidos
-      // await AsyncStorage.setItem("@pedidosLineares", JSON.stringify(todos));
       await salvarStorage("@pedidosLineares", todos);
       Alert.alert("Pedidos enviados com sucesso!");
     } catch (error) {

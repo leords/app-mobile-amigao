@@ -18,7 +18,6 @@ export const EnviarSolicitacaoPedidoPlanilha = async (pedidos) => {
 
     if (texto.trim() !== "OK") {
       // Se não retornou OK, trata como erro
-      Alert.alert(texto);
       throw new Error("Resposta da planilha não OK: " + texto);
     }
   } catch (err) {

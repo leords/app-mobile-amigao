@@ -1,11 +1,18 @@
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { removerPedidoPorIndiceDoStorage } from "../storage/ControladorStorage";
+import {
+  buscarStorage,
+  removerPedidoPorIndiceDoStorage,
+} from "../storage/ControladorStorage";
+import { useCallback, useEffect, useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 
 export default function PedidoCard({ pedido, index, refs, baixarImagem }) {
+  const [statusPedido, setStatusEnviado] = useState(true);
+
   const apagarPedido = async (index) => {
-    //console.log(index);
+    console.log(pedido);
     if (index) {
       await removerPedidoPorIndiceDoStorage(index);
 
@@ -14,6 +21,26 @@ export default function PedidoCard({ pedido, index, refs, baixarImagem }) {
       Alert.alert("Erro ao encontrar o pedido");
     }
   };
+
+  useFocusEffect(
+    useCallback(() => {
+      const buscarPedidosLineares = async () => {
+        const storagePedidosLineares = await buscarStorage("@pedidosLineares");
+
+        console.log(index);
+
+        if (Array.isArray(storagePedidosLineares)) {
+          const pedidoAtual = storagePedidosLineares[index];
+          if (pedidoAtual?.enviado === true) {
+            setStatusEnviado(false);
+          } else {
+            setStatusEnviado(true);
+          }
+        }
+      };
+      buscarPedidosLineares();
+    }, [index])
+  );
 
   return (
     <View
@@ -76,16 +103,25 @@ export default function PedidoCard({ pedido, index, refs, baixarImagem }) {
       </View>
 
       <View style={styles.acoesPedido}>
-        <TouchableOpacity
-          onPress={() => {
-            Alert.alert("Confirmar Apagar", "Deseja realmente apagar pedido?", [
-              { text: "Não", style: "cancel" },
-              { text: "Sim", onPress: () => apagarPedido() },
-            ]);
-          }}
-        >
-          <FontAwesome name="trash-o" size={22} color="red" />
-        </TouchableOpacity>
+        {statusPedido ? (
+          <TouchableOpacity
+            onPress={() => {
+              Alert.alert(
+                "Confirmar Apagar",
+                "Deseja realmente apagar pedido?",
+                [
+                  { text: "Não", style: "cancel" },
+                  { text: "Sim", onPress: () => apagarPedido(index) },
+                ]
+              );
+            }}
+          >
+            <FontAwesome name="trash-o" size={22} color="red" />
+          </TouchableOpacity>
+        ) : (
+          <FontAwesome name="check-square-o" size={22} color="green" />
+        )}
+
         <TouchableOpacity onPress={() => baixarImagem(index)}>
           <FontAwesome5 name="file-download" size={21} color="green" />
         </TouchableOpacity>
