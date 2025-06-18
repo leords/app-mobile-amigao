@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { View, Text, FlatList, TextInput, StyleSheet } from "react-native";
 import Cabecalho from "../components/Cabecalho";
 import { useNavigation } from "@react-navigation/native";
-import { TouchableOpacity } from "react-native";
+import { TouchableOpacity, ActivityIndicator } from "react-native";
 import { buscarClientesDaAPI } from "../services/ClientesService";
 import { buscarStorage } from "../storage/ControladorStorage";
 import { useAuth } from "../context/AuthContext";
@@ -16,6 +16,7 @@ export default function ListaCliente() {
   const [positivados, setPositivados] = useState([]);
   const [atualizarPositivacao, setAtualizarPositivacao] = useState(false);
   const [corPositivao, setCorPositivacao] = useState();
+  const [loading, setLoading] = useState(false);
 
   const { user } = useAuth();
   const navegacao = useNavigation();
@@ -67,10 +68,13 @@ export default function ListaCliente() {
       if (jsonValue && jsonValue.length > 0) {
         setClientes(jsonValue);
       } else {
+        setLoading(true);
         await buscarClientesDaAPI(user, setClientes);
+        setLoading(false);
       }
     } catch (e) {
       console.error("Erro ao carregar clientes locais:", e);
+      setLoading(false);
     }
   };
 
@@ -128,21 +132,27 @@ export default function ListaCliente() {
         onChangeText={setBusca}
         style={styles.input}
       />
-      <View style={styles.containerPositivacao}>
-        <Text style={styles.titlePositivacao}>Positivação do dia: </Text>
-        <Text style={[styles.positivacao, { color: corPositivao }]}>
-          {atualizarPositivacao}
-        </Text>
-      </View>
-      <FlatList
-        style={styles.list}
-        data={clientesFiltrados}
-        keyExtractor={(_, index) => index.toString()}
-        renderItem={renderItem}
-        ListEmptyComponent={
-          <Text style={styles.vazio}>Nenhum cliente encontrado</Text>
-        }
-      />
+      {loading ? (
+        <ActivityIndicator size="large" color="red" marginTop="30" />
+      ) : (
+        <View>
+          <View style={styles.containerPositivacao}>
+            <Text style={styles.titlePositivacao}>Positivação do dia: </Text>
+            <Text style={[styles.positivacao, { color: corPositivao }]}>
+              {atualizarPositivacao}
+            </Text>
+          </View>
+          <FlatList
+            style={styles.list}
+            data={clientesFiltrados}
+            keyExtractor={(_, index) => index.toString()}
+            renderItem={renderItem}
+            ListEmptyComponent={
+              <Text style={styles.vazio}>Nenhum cliente encontrado</Text>
+            }
+          />
+        </View>
+      )}
     </View>
   );
 }

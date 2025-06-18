@@ -10,7 +10,6 @@ import {
 import Cabecalho from "../components/Cabecalho";
 import { ValidarAdmin } from "../services/ValidarAdmin";
 import { useState } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuth } from "../context/AuthContext";
 import { removerStorage } from "../storage/ControladorStorage";
 

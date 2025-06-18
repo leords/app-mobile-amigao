@@ -1,13 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  View,
-  TextInput,
-  FlatList,
-  Text,
-  StyleSheet,
-  Image,
-} from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { View, TextInput, FlatList, Text, StyleSheet } from "react-native";
 import Cabecalho from "../components/Cabecalho";
 import { buscarProdutosDaAPI } from "../services/ProdutosService";
 import { buscarStorage } from "../storage/ControladorStorage";

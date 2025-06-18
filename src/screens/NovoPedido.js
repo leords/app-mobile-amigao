@@ -15,7 +15,6 @@ import { useNavigation } from "@react-navigation/native";
 import { GpsCliente } from "../utils/GeradorGPSCliente";
 import {
   atualizarStorage,
-  buscarStorage,
   criarCallbackAdicionarPedido,
 } from "../storage/ControladorStorage";
 import { useAuth } from "../context/AuthContext";
