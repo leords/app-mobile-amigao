@@ -3,8 +3,8 @@ import { pegarDiaSemanaHoje } from "../utils/Data";
 import Constants from "expo-constants";
 
 export const buscarClientesDaAPI = async (vendedor, setClientes) => {
-  const { URL_CLIENTES } = Constants.expoConfig.extra;
-
+  //const { URL_CLIENTES } = Constants.expoConfig.extra;
+  const URL_CLIENTES = Constants.expoConfig.extra.URL_CLIENTES;
   try {
     const dia = pegarDiaSemanaHoje();
     const response = await fetch(URL_CLIENTES, {
@@ -12,7 +12,7 @@ export const buscarClientesDaAPI = async (vendedor, setClientes) => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ vendedor, dia }),
+      body: JSON.stringify({ vendedor }),
     });
 
     const data = await response.json();

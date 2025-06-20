@@ -15,7 +15,7 @@ export const AppNavigator = () => {
     const checkUser = async () => {
       const storedUser = await buscarStorage("@user");
       // valida a existencia
-      if (storedUser !== null) {
+      if (Array.isArray(storedUser) && storedUser.length > 0) {
         setUser(storedUser);
         setLoading(false);
       } else {

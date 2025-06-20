@@ -78,7 +78,7 @@ export default function Pedido() {
     const dataFormatada = dataAtual.toLocaleDateString("pt-BR");
 
     //Criando o cabeçalho que é padrão da planilha = data - cliente - vendedor
-    const cabecalho = [dataFormatada, cliente.Cliente, user];
+    const cabecalho = [dataFormatada, cliente.Cliente, cliente.Vendedor];
 
     // ele achata os dados para uma única linha, ou seja um array inteiro de objetos em uma unica linha = [1, array1, 2, array2, ...]
     // necessario para salvar em planilhas!!!!

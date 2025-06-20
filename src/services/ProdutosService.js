@@ -2,7 +2,7 @@ import { salvarStorage } from "../storage/ControladorStorage";
 import Constants from "expo-constants";
 
 export const buscarProdutosDaAPI = async (setProdutos) => {
-  const { URL_PRODUTOS } = Constants.expoConfig.extra;
+  const URL_PRODUTOS = Constants.expoConfig.extra.URL_PRODUTOS;
 
   try {
     const response = await fetch(URL_PRODUTOS, {

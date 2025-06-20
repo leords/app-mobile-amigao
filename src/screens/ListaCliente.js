@@ -69,7 +69,11 @@ export default function ListaCliente() {
         setClientes(jsonValue);
       } else {
         setLoading(true);
-        await buscarClientesDaAPI(user, setClientes);
+        if (user?.toLowerCase() === "admin") {
+          await buscarClientesDaAPI(null, setClientes);
+        } else {
+          await buscarClientesDaAPI(user, setClientes); // busca filtrado
+        }
         setLoading(false);
       }
     } catch (e) {

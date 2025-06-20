@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { View, TextInput, FlatList, Text, StyleSheet } from "react-native";
+import {
+  View,
+  TextInput,
+  FlatList,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+} from "react-native";
 import Cabecalho from "../components/Cabecalho";
 import { buscarProdutosDaAPI } from "../services/ProdutosService";
 import { buscarStorage } from "../storage/ControladorStorage";
@@ -8,6 +15,7 @@ export default function ListaProduto() {
   const [produtos, setProdutos] = useState([]);
   const [busca, setBusca] = useState("");
   const [produtosFiltrados, setProdutosFiltrados] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const imagem = require("../assets/vasilhames.png");
 
@@ -22,13 +30,16 @@ export default function ListaProduto() {
   const carregarProdutosLocais = async () => {
     try {
       const jsonValue = await buscarStorage("@produtos");
-      if (jsonValue != null) {
+      if (Array.isArray(jsonValue) && jsonValue.length > 0) {
         setProdutos(jsonValue);
       } else {
+        setLoading(true);
         await buscarProdutosDaAPI(setProdutos);
+        setLoading(false);
       }
     } catch (e) {
       console.error("Erro ao carregar produtos locais:", e);
+      setLoading(false);
     }
   };
 
@@ -59,26 +70,32 @@ export default function ListaProduto() {
 
   return (
     <View style={styles.container}>
-      <Cabecalho
-        onPress={() => " "}
-        icone={""} /* enviar o nome do icone a ser renderizado no header */
-        descriptionIcone={""} /* enviar a descrição do botão */
-        image={imagem} /* enviar a imagem */
-      />
-      <TextInput
-        placeholder="Buscar produto"
-        value={busca}
-        onChangeText={setBusca}
-        style={styles.input}
-      />
-      <FlatList
-        data={produtosFiltrados}
-        keyExtractor={(item) => item.Id.toString()}
-        renderItem={renderItem}
-        ListEmptyComponent={
-          <Text style={styles.vazio}>Nenhum produto encontrado</Text>
-        }
-      />
+      {loading ? (
+        <ActivityIndicator size="large" color="red" marginTop="30" />
+      ) : (
+        <>
+          <Cabecalho
+            onPress={() => " "}
+            icone={""} /* enviar o nome do icone a ser renderizado no header */
+            descriptionIcone={""} /* enviar a descrição do botão */
+            image={imagem} /* enviar a imagem */
+          />
+          <TextInput
+            placeholder="Buscar produto"
+            value={busca}
+            onChangeText={setBusca}
+            style={styles.input}
+          />
+          <FlatList
+            data={produtosFiltrados}
+            keyExtractor={(item) => item.Id.toString()}
+            renderItem={renderItem}
+            ListEmptyComponent={
+              <Text style={styles.vazio}>Nenhum produto encontrado</Text>
+            }
+          />
+        </>
+      )}
     </View>
   );
 }
