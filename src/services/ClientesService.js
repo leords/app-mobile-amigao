@@ -6,7 +6,8 @@ export const buscarClientesDaAPI = async (vendedor, setClientes) => {
   //const { URL_CLIENTES } = Constants.expoConfig.extra;
   const URL_CLIENTES = Constants.expoConfig.extra.URL_CLIENTES;
   try {
-    const dia = pegarDiaSemanaHoje();
+    // está puxando a base total do vendedor
+    //const dia = pegarDiaSemanaHoje();
     const response = await fetch(URL_CLIENTES, {
       method: "POST",
       headers: {

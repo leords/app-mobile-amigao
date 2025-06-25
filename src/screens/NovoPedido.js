@@ -2,22 +2,25 @@ import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
+  StyleSheet,
   TextInput,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   FlatList,
-  StyleSheet,
+  Alert,
+  Platform,
+  SafeAreaView,
+  KeyboardAvoidingView,
+  Modal,
+  Keyboard,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import Autocomplete from "react-native-autocomplete-input";
-import { useRoute } from "@react-navigation/native";
-import { Alert } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useRoute, useNavigation } from "@react-navigation/native";
 import { GpsCliente } from "../utils/GeradorGPSCliente";
 import {
   atualizarStorage,
   criarCallbackAdicionarPedido,
 } from "../storage/ControladorStorage";
-import { useAuth } from "../context/AuthContext";
 
 export default function Pedido() {
   const [produtos, setProdutos] = useState([]);
@@ -25,13 +28,10 @@ export default function Pedido() {
   const [produtoSelecionado, setProdutoSelecionado] = useState(null);
   const [quantidade, setQuantidade] = useState("");
   const [itensPedido, setItensPedido] = useState([]);
-  const [mostrarSugestoes, setMostrarSugestoes] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
   const [formaPagamento, setFormaPagamento] = useState("A VISTA");
 
-  const { user } = useAuth();
-
   const navegacao = useNavigation();
-
   const route = useRoute();
   const { cliente } = route.params;
 
@@ -43,16 +43,14 @@ export default function Pedido() {
     carregarProdutos();
   }, []);
 
-  // função que adiciona um novo item no array em orçamento de produtos.
   const adicionarItem = () => {
     if (!produtoSelecionado || !quantidade) return;
-
     const preco = parseFloat(produtoSelecionado["Valor"]);
     const qtd = parseInt(quantidade);
     const total = preco * qtd;
 
     const novoItem = {
-      id: Date.now(), // resolve como um ID
+      id: Date.now(),
       quantidade: qtd,
       nome: produtoSelecionado.Produto,
       preco,
@@ -63,220 +61,248 @@ export default function Pedido() {
     setProdutoSelecionado(null);
     setProdutoQuery("");
     setQuantidade("");
-    setMostrarSugestoes(false); // Impede que a lista reabra
+    setModalVisible(false);
   };
 
-  //Função que remove um item do orçamento do array do produtos
   const removerItem = (id) => {
     const novaLista = itensPedido.filter((item) => item.id !== id);
     setItensPedido(novaLista);
   };
 
-  //Função que salva o orçamento como pedido
   const salvarPedido = async () => {
     const dataAtual = new Date();
     const dataFormatada = dataAtual.toLocaleDateString("pt-BR");
 
-    //Criando o cabeçalho que é padrão da planilha = data - cliente - vendedor
-    const cabecalho = [dataFormatada, cliente.Cliente, cliente.Vendedor];
-
-    // ele achata os dados para uma única linha, ou seja um array inteiro de objetos em uma unica linha = [1, array1, 2, array2, ...]
-    // necessario para salvar em planilhas!!!!
-    const produtosLinearizados = itensPedido.flatMap((item, index) => [
+    const cabecalho = [
+      dataAtual.toLocaleDateString("pt-BR"),
+      cliente.Cliente,
+      cliente.Vendedor,
+    ];
+    const produtosLinearizados = itensPedido.flatMap((item) => [
       item.quantidade,
       item.nome,
       item.preco,
       item.total,
     ]);
 
-    //Quantidade máxima de produtos (19) × 4 colunas = 76 colunas
-    //Caso ter menos que isso de produtos, considere como branco a lacuna.
     while (produtosLinearizados.length < 76) {
       produtosLinearizados.push("", "", "", "");
     }
-    //percorrendo os item para fazer o total
-    //reduce percorre o objeto para acumular resultados, neste caso o acumulador vai somar os item.total do array itensPedido!!!
-    const totalGeral = itensPedido.reduce((acc, item) => acc + item.total, 0);
-    //criando o rodapé final do array
-    const rodape = ["TOTAL", totalGeral, "PAGAMENTO", formaPagamento];
 
-    //Faz a junção para criar linha final no padrão data-cliente-vendedor-produtos...
-    //os 3 pontos é um = spread: desestrutura\espalha os elementos do array, possibilitando juntar todos os elementos de cada array e apenas um array, mantendo a ordem.
-    //Usando spread operator para concatenar três arrays diferentes em um único array plano:
+    const totalGeral = itensPedido.reduce((acc, item) => acc + item.total, 0);
+    const rodape = ["TOTAL", totalGeral, "PAGAMENTO", formaPagamento];
     const linhaFinal = [...cabecalho, ...produtosLinearizados, ...rodape];
 
-    //Criando um array de objetos para organizar as partes do pedido separadamente:
-    //Apenas para conseguir listar no APP
     const pedidoFinal = {
       cabecalho,
       itensPedido,
       rodape,
     };
 
-    //atualizando o storage, +1 pedido
     const callbackPedidos = criarCallbackAdicionarPedido(pedidoFinal);
     await atualizarStorage("@pedidos", callbackPedidos);
-
-    //coletando as coordenadas
     await GpsCliente(pedidoFinal);
 
-    //atualizando o storage, +1 pedido
     const callbackPedidosLineares = criarCallbackAdicionarPedido(linhaFinal);
     await atualizarStorage("@pedidosLineares", callbackPedidosLineares);
 
-    //Reseta as variaveis
     setItensPedido([]);
     setProdutoQuery("");
     setProdutoSelecionado(null);
     setQuantidade("");
-    setMostrarSugestoes(false);
+    setModalVisible(false);
+  };
+
+  const filtrarProdutos = (query) => {
+    if (!query) return [];
+    return produtos.filter(
+      (p) =>
+        p?.Produto &&
+        typeof p.Produto === "string" &&
+        p.Produto.toLowerCase().includes(query.toLowerCase())
+    );
   };
 
   return (
-    <View style={styles.container}>
-      {/* TITULO + CLIENTE SELECIONADO */}
-      <Text style={styles.titulo}>CLIENTE {cliente.Cliente}</Text>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      keyboardVerticalOffset={80}
+    >
+      <SafeAreaView style={{ flex: 1 }}>
+        <View style={styles.container}>
+          <Text style={styles.titulo}>CLIENTE {cliente.Cliente}</Text>
 
-      {/* LISTA PARA SELECIONAR PRODUTOS */}
-      <Text style={styles.label}>Selecione o produto</Text>
-      <Autocomplete
-        data={
-          produtoSelecionado || !mostrarSugestoes
-            ? []
-            : produtos.filter(
-                (p) =>
-                  typeof p.Produto === "string" &&
-                  p.Produto.toLowerCase().includes(
-                    (produtoQuery || "").toLowerCase()
-                  )
-              )
-        }
-        defaultValue={produtoQuery}
-        onChangeText={(text) => {
-          setProdutoQuery(text);
-          setProdutoSelecionado(null);
-          setMostrarSugestoes(true);
-        }}
-        keyExtractor={(item) => item.Id.toString()}
-        flatListProps={{
-          keyExtractor: (item) => item.Id.toString(),
-          renderItem: ({ item }) => (
+          <Text style={styles.label}>Selecione o produto</Text>
+          <TouchableOpacity
+            onPress={() => setModalVisible(true)}
+            style={styles.input}
+          >
+            <Text>
+              {produtoSelecionado
+                ? produtoSelecionado.Produto
+                : "Digite ou selecione um produto"}
+            </Text>
+          </TouchableOpacity>
+
+          <View style={styles.quantidade}>
+            <Text style={styles.label}>Quantidade</Text>
+            <TextInput
+              keyboardType="numeric"
+              style={styles.inputText}
+              placeholder="?"
+              value={quantidade}
+              onChangeText={setQuantidade}
+            />
+          </View>
+
+          {produtoSelecionado && quantidade ? (
+            <Text style={styles.total}>
+              Item: R${" "}
+              {(produtoSelecionado["Valor"] * parseInt(quantidade)).toFixed(2)}
+            </Text>
+          ) : null}
+
+          <TouchableOpacity style={styles.botaoSave} onPress={adicionarItem}>
+            <Text style={styles.botaoTexto}>Adicionar Produto</Text>
+          </TouchableOpacity>
+
+          <FlatList
+            data={itensPedido}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item }) => (
+              <View style={styles.itemLinha}>
+                <Text>
+                  {item.quantidade}x {item.nome} - R$ {item.total.toFixed(2)}
+                </Text>
+                <TouchableOpacity onPress={() => removerItem(item.id)}>
+                  <Text style={{ color: "red" }}>Remover</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          />
+
+          <Text style={styles.total}>
+            Total Pedido: R${" "}
+            {itensPedido.reduce((acc, i) => acc + i.total, 0).toFixed(2)}
+          </Text>
+
+          <Text style={styles.label}>Forma de Pagamento</Text>
+          <FlatList
+            data={["A VISTA", "CARTÃO", "PIX", "CHEQUE"]}
+            keyExtractor={(item) => item}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={[
+                  styles.opcaoPagamento,
+                  formaPagamento === item && styles.opcaoSelecionada,
+                ]}
+                onPress={() => setFormaPagamento(item)}
+              >
+                <Text style={styles.opcaoTexto}>{item}</Text>
+              </TouchableOpacity>
+            )}
+          />
+
+          <View style={styles.containerButton}>
             <TouchableOpacity
+              style={[styles.botaoCondition, { backgroundColor: "red" }]}
               onPress={() => {
-                setProdutoSelecionado(item);
-                setProdutoQuery(item.Produto);
-                setMostrarSugestoes(false);
+                Alert.alert(
+                  "Confirmar Cancelar",
+                  "Deseja realmente cancelar o pedido?",
+                  [
+                    { text: "Não", style: "cancel" },
+                    {
+                      text: "Sim",
+                      onPress: () => navegacao.navigate("Home"),
+                    },
+                  ]
+                );
               }}
             >
-              <Text style={styles.item}>{item.Produto}</Text>
+              <Text style={styles.botaoTexto}>Cancelar</Text>
             </TouchableOpacity>
-          ),
-        }}
-        inputContainerStyle={styles.input}
-      />
 
-      {/* INPUT DE QUANTIDADE */}
-      <View style={styles.quantidade}>
-        <Text style={styles.label}>Quantidade</Text>
-        <TextInput
-          keyboardType="numeric"
-          style={styles.inputText}
-          placeholder="?"
-          value={quantidade}
-          onChangeText={setQuantidade}
-        />
-      </View>
-
-      {/* TOTAL DO ITEM SELECIONADO */}
-      {produtoSelecionado && quantidade ? (
-        <Text style={styles.total}>
-          Item: R${" "}
-          {(produtoSelecionado["Valor"] * parseInt(quantidade)).toFixed(2)}
-        </Text>
-      ) : null}
-
-      <TouchableOpacity style={styles.botaoSave} onPress={adicionarItem}>
-        <Text style={styles.botaoTexto}>Adicionar Produto</Text>
-      </TouchableOpacity>
-
-      {/* LISTA DE PRODUTOS COLOCADOS NO PEDIDO */}
-      <FlatList
-        data={itensPedido}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.itemLinha}>
-            <Text>
-              {item.quantidade}x {item.nome} - R$ {item.total.toFixed(2)}
-            </Text>
-            <TouchableOpacity onPress={() => removerItem(item.id)}>
-              <Text style={{ color: "red" }}>Remover</Text>
+            <TouchableOpacity
+              style={[styles.botaoCondition, { backgroundColor: "green" }]}
+              onPress={() => {
+                Alert.alert(
+                  "Confirmar Salvar",
+                  `Deseja realmente salvar o pedido no ${formaPagamento}?`,
+                  [
+                    { text: "Não", style: "cancel" },
+                    { text: "Sim", onPress: () => salvarPedido() },
+                  ]
+                );
+              }}
+            >
+              <Text style={styles.botaoTexto}>Salvar Pedido</Text>
             </TouchableOpacity>
           </View>
-        )}
-      />
+        </View>
 
-      {/* TOTAL DO PEDIDO */}
-      <Text style={styles.total}>
-        Total Pedido: R${" "}
-        {itensPedido.reduce((acc, i) => acc + i.total, 0).toFixed(2)}
-      </Text>
+        {/* Modal funcional de seleção de produto */}
 
-      {/* FORMA DE PAGAMENTO */}
-      <Text style={styles.label}>Forma de Pagamento</Text>
-      <FlatList
-        data={["A VISTA", "CARTÃO", "PIX", "CHEQUE"]}
-        keyExtractor={(item) => item}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={[
-              styles.opcaoPagamento,
-              formaPagamento === item && styles.opcaoSelecionada,
-            ]}
-            onPress={() => setFormaPagamento(item)}
-          >
-            <Text style={styles.opcaoTexto}>{item}</Text>
-          </TouchableOpacity>
-        )}
-      />
-
-      {/* BOTOES DE CANCELAR E SALVAR */}
-      <View style={styles.containerButton}>
-        <TouchableOpacity
-          style={[styles.botaoCondition, { backgroundColor: "red" }]}
-          onPress={() => {
-            Alert.alert(
-              "Confirmar Cancelar",
-              "Deseja realmente cancelar o pedido?",
-              [
-                //{ text: "Não", style: "cancel" },
-                { text: "Não", style: "cancel" },
-                { text: "Sim", onPress: () => navegacao.navigate("Home") },
-              ]
-            );
-          }}
+        <Modal
+          visible={modalVisible}
+          animationType="slide"
+          onRequestClose={() => setModalVisible(false)}
+          transparent={Platform.OS === "ios" ? true : false} // TRANSPARENTE SOMENTE NO IOS
         >
-          <Text style={styles.botaoTexto}>Cancelar</Text>
-        </TouchableOpacity>
+          <View style={styles.modalOverlay}>
+            <KeyboardAvoidingView
+              behavior={Platform.OS === "ios" ? "padding" : "height"}
+              keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 100}
+              style={styles.modalContainer}
+            >
+              <TextInput
+                style={styles.input}
+                placeholder="Digite o nome do produto"
+                value={produtoQuery}
+                onChangeText={(text) => setProdutoQuery(text)}
+                autoFocus
+                returnKeyType="done"
+                onSubmitEditing={Keyboard.dismiss}
+              />
+              <FlatList
+                data={filtrarProdutos(produtoQuery)}
+                keyExtractor={(item) => item.Id.toString()}
+                keyboardShouldPersistTaps="handled"
+                removeClippedSubviews={false}
+                style={styles.listaProdutos}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.sugestaoItem}
+                    onPress={() => {
+                      setProdutoSelecionado(item);
+                      setProdutoQuery(item.Produto);
+                      setModalVisible(false);
+                    }}
+                  >
+                    <Text>{item.Produto}</Text>
+                  </TouchableOpacity>
+                )}
+                ListEmptyComponent={
+                  <Text style={{ padding: 10, textAlign: "center" }}>
+                    Nenhum produto encontrado
+                  </Text>
+                }
+              />
 
-        <TouchableOpacity
-          style={[styles.botaoCondition, { backgroundColor: "green" }]}
-          onPress={() => {
-            Alert.alert(
-              "Confirmar Salvar",
-              `Deseja realmente salvar o pedido no ${formaPagamento}?`,
-              [
-                { text: "Não", style: "cancel" },
-                { text: "Sim", onPress: () => salvarPedido() },
-              ]
-            );
-          }}
-        >
-          <Text style={styles.botaoTexto}>Salvar Pedido</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+              <TouchableOpacity
+                onPress={() => setModalVisible(false)}
+                style={[styles.botaoSave, { marginTop: 20 }]}
+              >
+                <Text style={styles.botaoTexto}>Fechar</Text>
+              </TouchableOpacity>
+            </KeyboardAvoidingView>
+          </View>
+        </Modal>
+      </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -293,18 +319,19 @@ const styles = StyleSheet.create({
   label: {
     marginTop: 4,
     marginBottom: 4,
-    fontWeight: 600,
+    fontWeight: "600",
   },
   input: {
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 5,
-    //marginBottom: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 12,
+    backgroundColor: "#fff",
   },
   quantidade: {
     alignItems: "center",
     justifyContent: "center",
-    textAlign: "center",
     marginTop: 40,
   },
   inputText: {
@@ -317,12 +344,13 @@ const styles = StyleSheet.create({
     height: 50,
     textAlign: "center",
     fontSize: 30,
-    fontWeight: 600,
+    fontWeight: "600",
+    backgroundColor: "#fff",
   },
-  item: {
-    padding: 10,
-    borderBottomWidth: 1,
-    borderColor: "#eee",
+  itemLinha: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 10,
   },
   botaoSave: {
     backgroundColor: "#444",
@@ -340,11 +368,6 @@ const styles = StyleSheet.create({
   botaoTexto: {
     color: "white",
     textAlign: "center",
-  },
-  itemLinha: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 10,
   },
   total: {
     fontWeight: "bold",
@@ -373,5 +396,29 @@ const styles = StyleSheet.create({
   opcaoTexto: {
     color: "#333",
     fontWeight: "bold",
+  },
+  sugestaoItem: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderColor: "#eee",
+    backgroundColor: "#fff",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: Platform.OS === "ios" ? "rgba(0,0,0,0.4)" : "#fff", // branco no Android para modal sólida
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 20,
+  },
+  modalContainer: {
+    width: "100%",
+    maxHeight: "80%",
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    padding: 20,
+  },
+  listaProdutos: {
+    maxHeight: 250,
+    marginTop: 10,
   },
 });

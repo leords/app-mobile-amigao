@@ -15,7 +15,6 @@ export default function ListaCliente() {
   const [clientesFiltrados, setClientesFiltrados] = useState([]);
   const [positivados, setPositivados] = useState([]);
   const [atualizarPositivacao, setAtualizarPositivacao] = useState(false);
-  const [corPositivao, setCorPositivacao] = useState();
   const [loading, setLoading] = useState(false);
 
   const { user } = useAuth();
@@ -44,21 +43,10 @@ export default function ListaCliente() {
   const buscarClientePositivados = async () => {
     const dados = await buscarStorage("@pedidos");
     setPositivados(dados);
-    const clientes = await buscarStorage("@clientes");
 
-    const resultado = dados.length / clientes.length;
+    const resultado = dados.length;
 
-    const cor = resultado < 3 ? "red" : resultado < 7 ? "orange" : "green";
-
-    // formatando número decimal para porcentagem.
-    const formatado = new Intl.NumberFormat("pt-BR", {
-      style: "percent",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
-    }).format(resultado);
-
-    setAtualizarPositivacao(formatado);
-    setCorPositivacao(cor);
+    setAtualizarPositivacao(resultado);
   };
 
   // busca clientes do AsyncStorage, caso não encontrar ele chama da API novamente.
@@ -141,10 +129,8 @@ export default function ListaCliente() {
       ) : (
         <View>
           <View style={styles.containerPositivacao}>
-            <Text style={styles.titlePositivacao}>Positivação do dia: </Text>
-            <Text style={[styles.positivacao, { color: corPositivao }]}>
-              {atualizarPositivacao}
-            </Text>
+            <Text style={styles.titlePositivacao}>Positivados do dia: </Text>
+            <Text style={styles.positivacao}>{atualizarPositivacao}</Text>
           </View>
           <FlatList
             style={styles.list}
