@@ -1,13 +1,18 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, FlatList, TextInput, StyleSheet } from "react-native";
+import React, { useEffect, useState, useCallback } from "react";
+import {
+  View,
+  Text,
+  FlatList,
+  TextInput,
+  StyleSheet,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
 import Cabecalho from "../components/Cabecalho";
-import { useNavigation } from "@react-navigation/native";
-import { TouchableOpacity, ActivityIndicator } from "react-native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { buscarClientesDaAPI } from "../services/ClientesService";
 import { buscarStorage } from "../storage/ControladorStorage";
 import { useAuth } from "../context/AuthContext";
-import { useFocusEffect } from "@react-navigation/native";
-import { useCallback } from "react";
 
 export default function ListaCliente() {
   const [clientes, setClientes] = useState([]);
@@ -15,14 +20,13 @@ export default function ListaCliente() {
   const [clientesFiltrados, setClientesFiltrados] = useState([]);
   const [positivados, setPositivados] = useState([]);
   const [atualizarPositivacao, setAtualizarPositivacao] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [carregando, setCarregando] = useState(false);
 
   const { user } = useAuth();
   const navegacao = useNavigation();
 
   const imagem = require("../assets/clientes.png");
 
-  // Isso garante que mesmo que a tela já foi montada a função seja chamada, assim que a tela seja o foco. Então sempre que abrir a tela essa função será chamada!!!
   useFocusEffect(
     useCallback(() => {
       carregarClientesLocais();
@@ -35,12 +39,11 @@ export default function ListaCliente() {
 
   useFocusEffect(
     useCallback(() => {
-      buscarClientePositivados();
+      buscarClientesPositivados();
     }, [])
   );
 
-  // função que vai criar um array com clientes que já tem pedido realizado!
-  const buscarClientePositivados = async () => {
+  const buscarClientesPositivados = async () => {
     const dados = await buscarStorage("@pedidos");
     setPositivados(dados);
 
@@ -49,24 +52,23 @@ export default function ListaCliente() {
     setAtualizarPositivacao(resultado);
   };
 
-  // busca clientes do AsyncStorage, caso não encontrar ele chama da API novamente.
   const carregarClientesLocais = async () => {
     try {
       const jsonValue = await buscarStorage("@clientes");
       if (jsonValue && jsonValue.length > 0) {
         setClientes(jsonValue);
       } else {
-        setLoading(true);
+        setCarregando(true);
         if (user?.toLowerCase() === "admin") {
           await buscarClientesDaAPI(null, setClientes);
         } else {
-          await buscarClientesDaAPI(user, setClientes); // busca filtrado
+          await buscarClientesDaAPI(user, setClientes);
         }
-        setLoading(false);
+        setCarregando(false);
       }
     } catch (e) {
       console.error("Erro ao carregar clientes locais:", e);
-      setLoading(false);
+      setCarregando(false);
     }
   };
 
@@ -79,28 +81,25 @@ export default function ListaCliente() {
     setClientesFiltrados(filtrados);
   };
 
-  // { item } vem do flatList, assume os itens de data.
-  // e percore o array todo com o .some, validando os itens. true ou false
-  const renderItem = ({ item }) => {
+  const renderizarItem = ({ item }) => {
     const positivou = positivados?.some(
       (pedido) => pedido?.cabecalho?.[1] === item?.Cliente
     );
 
     return (
       <TouchableOpacity
-        //valida a condição de 'positivou' para determinar qual estilo ele assumirá.
-        style={[styles.item, positivou && styles.positivado]}
+        style={[estilos.item, positivou && estilos.positivado]}
         onPress={() => navegacao.navigate("Order", { cliente: item })}
       >
-        <View style={styles.containerDescription}>
-          <Text style={styles.nome}>{item.Cliente}</Text>
-          <Text style={styles.dados}>
+        <View style={estilos.containerDescricao}>
+          <Text style={estilos.nome}>{item.Cliente}</Text>
+          <Text style={estilos.dados}>
             {item.Dados.length > 11
               ? `CNPJ: ${item.Dados}`
               : `CPF: ${item.Dados}`}
           </Text>
         </View>
-        <Text style={styles.endereco}>
+        <Text style={estilos.endereco}>
           {item.Endereco} - {item.Cidade}
         </Text>
       </TouchableOpacity>
@@ -108,13 +107,12 @@ export default function ListaCliente() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={estilos.container}>
       <Cabecalho
         onPress={() => {
-          // tem a mesma função que o ! porém, garante que o valor seja trocado ao clicar duas vezes muito rápido!
-          //setAtualizarPositivados((prev) => !prev);
+          // Exemplo: setAtualizarPositivacao(prev => !prev)
         }}
-        icone={"reload"} // correção no nome 'realod' se necessário
+        icone={"reload"}
         descriptionIcone={"Atualizar"}
         image={imagem}
       />
@@ -122,23 +120,23 @@ export default function ListaCliente() {
         placeholder="Buscar Cliente"
         value={busca}
         onChangeText={setBusca}
-        style={styles.input}
+        style={estilos.entrada}
       />
-      {loading ? (
-        <ActivityIndicator size="large" color="red" marginTop="30" />
+      {carregando ? (
+        <ActivityIndicator size="large" color="red" marginTop={30} />
       ) : (
         <View>
-          <View style={styles.containerPositivacao}>
-            <Text style={styles.titlePositivacao}>Positivados do dia: </Text>
-            <Text style={styles.positivacao}>{atualizarPositivacao}</Text>
+          <View style={estilos.containerPositivacao}>
+            <Text style={estilos.tituloPositivacao}>Positivados do dia: </Text>
+            <Text style={estilos.valorPositivacao}>{atualizarPositivacao}</Text>
           </View>
           <FlatList
-            style={styles.list}
+            style={estilos.lista}
             data={clientesFiltrados}
             keyExtractor={(_, index) => index.toString()}
-            renderItem={renderItem}
+            renderItem={renderizarItem}
             ListEmptyComponent={
-              <Text style={styles.vazio}>Nenhum cliente encontrado</Text>
+              <Text style={estilos.vazio}>Nenhum cliente encontrado</Text>
             }
           />
         </View>
@@ -147,20 +145,20 @@ export default function ListaCliente() {
   );
 }
 
-const styles = StyleSheet.create({
+const estilos = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
     backgroundColor: "#FFF",
   },
-  input: {
+  entrada: {
     borderWidth: 1,
     borderColor: "#CCC",
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
   },
-  list: {
+  lista: {
     padding: 4,
   },
   item: {
@@ -180,26 +178,14 @@ const styles = StyleSheet.create({
     fontWeight: "200",
     marginTop: 4,
   },
-  containerDescription: {
+  containerDescricao: {
     flexDirection: "row",
     alignItems: "flex-start",
     justifyContent: "space-between",
   },
-  containerInfo: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  vendedor: {
-    textAlign: "right",
-  },
   dados: {
     textAlign: "left",
     fontWeight: "200",
-  },
-  containerEndereco: {
-    flexDirection: "column",
-    textAlign: "right",
-    marginTop: 6,
   },
   vazio: {
     textAlign: "center",
@@ -214,14 +200,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  titlePositivacao: {
+  tituloPositivacao: {
     textAlign: "center",
     fontSize: 14,
   },
-  positivacao: {
+  valorPositivacao: {
     textAlign: "center",
     fontSize: 16,
     marginLeft: 4,
-    fontWeight: 600,
+    fontWeight: "600",
   },
 });

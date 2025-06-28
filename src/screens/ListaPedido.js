@@ -18,17 +18,15 @@ export default function ListaPedido() {
     carregarPedidos();
   }, []);
 
-  const refs = useRef([]); // array de refs para os pedidos
+  const referencias = useRef([]); // array de refs para os pedidos
 
-  const baixarImagem = async (index) => {
-    // ref de flatList dos pedidos.
-    const viewRef = refs.current[index];
-    // passando a viewRed para a função que valida a permissao e faz o download da imagem gerada!
-    await PermissaoAcessoGaleria(viewRef);
+  const baixarImagem = async (indice) => {
+    const refView = referencias.current[indice];
+    await PermissaoAcessoGaleria(refView);
   };
 
   return (
-    <ScrollView style={styles.scrollContainer}>
+    <ScrollView style={estilos.containerScroll}>
       <Cabecalho
         onPress={() => " "}
         icone={""}
@@ -36,12 +34,12 @@ export default function ListaPedido() {
         image={imagem}
       />
 
-      {pedidos.map((pedido, index) => (
+      {pedidos.map((pedido, indice) => (
         <PedidoCard
-          key={`${pedido.rodape?.[1] ?? 0}-${index}`}
+          key={`${pedido.rodape?.[1] ?? 0}-${indice}`}
           pedido={pedido}
-          index={index}
-          refs={refs}
+          index={indice}
+          refs={referencias}
           baixarImagem={baixarImagem}
         />
       ))}
@@ -49,11 +47,11 @@ export default function ListaPedido() {
   );
 }
 
-const styles = StyleSheet.create({
-  scrollContainer: {
+const estilos = StyleSheet.create({
+  containerScroll: {
     padding: 10,
   },
-  pedidoBox: {
+  caixaPedido: {
     marginBottom: 24,
     borderRadius: 10,
     borderWidth: 1,
@@ -61,7 +59,7 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: "white",
   },
-  pedidoHeader: {
+  cabecalhoPedido: {
     flexDirection: "row",
     justifyContent: "space-between",
     paddingHorizontal: 10,
@@ -109,7 +107,7 @@ const styles = StyleSheet.create({
     borderColor: "#cccbcb",
     marginBottom: 10,
   },
-  colunaLabel: {
+  etiquetaColuna: {
     fontSize: 10,
     marginVertical: 10,
     marginHorizontal: 5,
@@ -121,40 +119,35 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     marginHorizontal: 5,
   },
-  tabelaTitulos: {
+  titulosTabela: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 10,
   },
-  colunaTitulo: {
-    fontSize: 8,
-    paddingHorizontal: 5,
-    color: "#494646",
-  },
-  itemLinha: {
+  linhaItem: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 10,
     width: "100%",
     padding: 4,
   },
-  itemQtd: {
+  qtdItem: {
     fontSize: 12,
     width: "5%",
     color: "#494747",
   },
-  itemNome: {
+  nomeItem: {
     fontSize: 12,
     width: "50%",
     color: "#494747",
   },
-  itemPreco: {
+  precoItem: {
     fontSize: 12,
     width: "18%",
     textAlign: "right",
     color: "#494747",
   },
-  itemTotal: {
+  totalItem: {
     fontSize: 12,
     width: "20%",
     textAlign: "right",
@@ -170,7 +163,7 @@ const styles = StyleSheet.create({
     borderColor: "#cccbcb",
     paddingTop: 10,
   },
-  resumoTexto: {
+  textoResumo: {
     fontSize: 12,
     color: "#494747",
   },

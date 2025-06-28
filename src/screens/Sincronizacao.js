@@ -15,11 +15,15 @@ import { testeConexao } from "../services/TesteConexao";
 import { pegarDataAtual } from "../utils/Data";
 import { DescargaGPS } from "../services/DescargaGPS";
 import { buscarStorage } from "../storage/ControladorStorage";
-import { limparStorageComCarga } from "../services/limparStorageComCarga";
+import { limparStorageComCarga } from "../services/LimparStorageComCarga";
+import { buscarClientesDaAPI } from "../services/ClientesService";
+import { buscarProdutosDaAPI } from "../services/ProdutosService";
 
 export default function Sincronizacao() {
   const [pedidos, setPedidos] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [produtos, setProdutos] = useState([]);
+  const [clientes, setClientes] = useState([]);
   const navegacao = useNavigation();
   const imagem = require("../assets/logo.png");
 
@@ -32,7 +36,7 @@ export default function Sincronizacao() {
     if (dados) setPedidos(dados);
   };
 
-  // Está função valida a conexao e faz as descargas de GPS e pedido.
+  // Está função valida a conexao e faz as descargas de GPS e pedidos.
   const tentarEnviarPedidos = async () => {
     const online = await testeConexao();
     if (!online) {
@@ -67,9 +71,41 @@ export default function Sincronizacao() {
     }
   };
 
-  // essa função valida a carga de pedidos.
+  // essa função valida a carga do aplicativo, zerando pedidos e recarregando produtos e clientes.
   const validarCarga = async () => {
-    await limparStorageComCarga(setLoading);
+    try {
+      setLoading(true);
+      await limparStorageComCarga();
+
+      try {
+        const usuario = await buscarStorage("@user");
+
+        await buscarProdutosDaAPI(setProdutos);
+        if (!produtos && !Array.isArray(produtos) && produtos.length == 0) {
+          throw new Error("Nenhum produto carregado!");
+        }
+
+        if (usuario) {
+          const isAdmin = usuario.toLowerCase() === "admin";
+          await buscarClientesDaAPI(isAdmin ? null : usuario, setClientes);
+
+          if (!clientes && !Array.isArray(clientes) && clientes.length == 0) {
+            throw new Error("Nenhum cliente carregado!");
+          }
+        } else {
+          throw new Error("Usuario não encontrado.");
+        }
+      } catch (error) {
+        throw error;
+      }
+
+      setLoading(false);
+    } catch (error) {
+      console.log(error);
+      Alert.alert(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -85,9 +121,9 @@ export default function Sincronizacao() {
       {loading ? (
         <ActivityIndicator size="large" color="red" marginTop="30" />
       ) : (
-        <View style={styles.containerButton}>
+        <View style={styles.containerBotao}>
           <TouchableOpacity
-            style={[styles.button, { backgroundColor: "#5dc770" }]}
+            style={[styles.botao, { backgroundColor: "#5dc770" }]}
             onPress={() => {
               Alert.alert("Confirmar Carga", "Deseja realmente dar carga?", [
                 { text: "Não", style: "cancel" },
@@ -98,11 +134,11 @@ export default function Sincronizacao() {
             <View style={styles.icone}>
               <Ionicons name="cloud-upload-outline" size={55} color="white" />
             </View>
-            <Text style={styles.text}>Carregar</Text>
+            <Text style={styles.texto}>Carregar</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.button, { backgroundColor: "#2498e8" }]}
+            style={[styles.botao, { backgroundColor: "#2498e8" }]}
             onPress={() => {
               Alert.alert(
                 "Confirmar Descarga",
@@ -117,7 +153,7 @@ export default function Sincronizacao() {
             <View styles={styles.icone}>
               <Ionicons name="cloud-download-outline" size={55} color="white" />
             </View>
-            <Text style={styles.text}>Descarregar</Text>
+            <Text style={styles.texto}>Descarregar</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -130,12 +166,12 @@ const styles = StyleSheet.create({
     padding: 20,
     flex: 1,
   },
-  containerButton: {
+  containerBotao: {
     marginTop: 20,
     justifyContent: "flex-start",
     alignItems: "center",
   },
-  button: {
+  botao: {
     width: "90%",
     height: "40%",
     alignItems: "center",
@@ -143,7 +179,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginBottom: 20,
   },
-  text: {
+  texto: {
     color: "white",
     fontSize: 16,
     fontWeight: 500,

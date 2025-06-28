@@ -5,46 +5,68 @@ import {
   StyleSheet,
   TextInput,
   TouchableOpacity,
-  TouchableWithoutFeedback,
   FlatList,
   Alert,
   Platform,
   SafeAreaView,
   KeyboardAvoidingView,
-  Modal,
   Keyboard,
+  TouchableWithoutFeedback,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRoute, useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { GpsCliente } from "../utils/GeradorGPSCliente";
 import {
   atualizarStorage,
+  buscarStorage,
   criarCallbackAdicionarPedido,
 } from "../storage/ControladorStorage";
+import { buscarProdutosDaAPI } from "../services/ProdutosService";
+import ModalSelecionarProduto from "../components/ModalSelecionarProduto";
 
 export default function Pedido() {
   const [produtos, setProdutos] = useState([]);
-  const [produtoQuery, setProdutoQuery] = useState("");
   const [produtoSelecionado, setProdutoSelecionado] = useState(null);
+  const [produtoQuery, setProdutoQuery] = useState("");
   const [quantidade, setQuantidade] = useState("");
   const [itensPedido, setItensPedido] = useState([]);
-  const [modalVisible, setModalVisible] = useState(false);
   const [formaPagamento, setFormaPagamento] = useState("A VISTA");
+  const [modalVisible, setModalVisible] = useState(false);
 
-  const navegacao = useNavigation();
+  const navigation = useNavigation();
   const route = useRoute();
   const { cliente } = route.params;
 
   useEffect(() => {
     const carregarProdutos = async () => {
-      const dados = await AsyncStorage.getItem("@produtos");
-      if (dados) setProdutos(JSON.parse(dados));
+      try {
+        const dados = await buscarStorage("@produtos");
+        if (dados && Array.isArray(dados) && dados.length > 0) {
+          setProdutos(dados);
+        } else {
+          const daAPI = await buscarProdutosDaAPI();
+          setProdutos(daAPI);
+        }
+      } catch (error) {
+        console.log("Erro ao carregar produtos", error);
+        Alert.alert("Erro", "Falha ao carregar os produtos.");
+      }
     };
     carregarProdutos();
   }, []);
 
+  const filtrarProdutos = (query) => {
+    if (!query) return [];
+    return produtos.filter(
+      (p) =>
+        p?.Produto &&
+        typeof p.Produto === "string" &&
+        p.Produto.toLowerCase().includes(query.toLowerCase())
+    );
+  };
+
   const adicionarItem = () => {
     if (!produtoSelecionado || !quantidade) return;
+
     const preco = parseFloat(produtoSelecionado["Valor"]);
     const qtd = parseInt(quantidade);
     const total = preco * qtd;
@@ -71,7 +93,6 @@ export default function Pedido() {
 
   const salvarPedido = async () => {
     const dataAtual = new Date();
-    const dataFormatada = dataAtual.toLocaleDateString("pt-BR");
 
     const cabecalho = [
       dataAtual.toLocaleDateString("pt-BR"),
@@ -107,202 +128,166 @@ export default function Pedido() {
     await atualizarStorage("@pedidosLineares", callbackPedidosLineares);
 
     setItensPedido([]);
-    setProdutoQuery("");
     setProdutoSelecionado(null);
+    setProdutoQuery("");
     setQuantidade("");
     setModalVisible(false);
   };
 
-  const filtrarProdutos = (query) => {
-    if (!query) return [];
-    return produtos.filter(
-      (p) =>
-        p?.Produto &&
-        typeof p.Produto === "string" &&
-        p.Produto.toLowerCase().includes(query.toLowerCase())
-    );
-  };
-
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      keyboardVerticalOffset={80}
-    >
-      <SafeAreaView style={{ flex: 1 }}>
-        <View style={styles.container}>
-          <Text style={styles.titulo}>CLIENTE {cliente.Cliente}</Text>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        keyboardVerticalOffset={80}
+      >
+        <SafeAreaView style={{ flex: 1 }}>
+          <View style={[styles.container, { flex: 1 }]}>
+            <Text style={styles.titulo}>CLIENTE {cliente.Cliente}</Text>
 
-          <Text style={styles.label}>Selecione o produto</Text>
-          <TouchableOpacity
-            onPress={() => setModalVisible(true)}
-            style={styles.input}
-          >
-            <Text>
-              {produtoSelecionado
-                ? produtoSelecionado.Produto
-                : "Digite ou selecione um produto"}
-            </Text>
-          </TouchableOpacity>
-
-          <View style={styles.quantidade}>
-            <Text style={styles.label}>Quantidade</Text>
-            <TextInput
-              keyboardType="numeric"
-              style={styles.inputText}
-              placeholder="?"
-              value={quantidade}
-              onChangeText={setQuantidade}
-            />
-          </View>
-
-          {produtoSelecionado && quantidade ? (
-            <Text style={styles.total}>
-              Item: R${" "}
-              {(produtoSelecionado["Valor"] * parseInt(quantidade)).toFixed(2)}
-            </Text>
-          ) : null}
-
-          <TouchableOpacity style={styles.botaoSave} onPress={adicionarItem}>
-            <Text style={styles.botaoTexto}>Adicionar Produto</Text>
-          </TouchableOpacity>
-
-          <FlatList
-            data={itensPedido}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={({ item }) => (
-              <View style={styles.itemLinha}>
-                <Text>
-                  {item.quantidade}x {item.nome} - R$ {item.total.toFixed(2)}
-                </Text>
-                <TouchableOpacity onPress={() => removerItem(item.id)}>
-                  <Text style={{ color: "red" }}>Remover</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          />
-
-          <Text style={styles.total}>
-            Total Pedido: R${" "}
-            {itensPedido.reduce((acc, i) => acc + i.total, 0).toFixed(2)}
-          </Text>
-
-          <Text style={styles.label}>Forma de Pagamento</Text>
-          <FlatList
-            data={["A VISTA", "CARTÃO", "PIX", "CHEQUE"]}
-            keyExtractor={(item) => item}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={[
-                  styles.opcaoPagamento,
-                  formaPagamento === item && styles.opcaoSelecionada,
-                ]}
-                onPress={() => setFormaPagamento(item)}
-              >
-                <Text style={styles.opcaoTexto}>{item}</Text>
-              </TouchableOpacity>
-            )}
-          />
-
-          <View style={styles.containerButton}>
+            <Text style={styles.label}>Selecione o produto</Text>
             <TouchableOpacity
-              style={[styles.botaoCondition, { backgroundColor: "red" }]}
-              onPress={() => {
-                Alert.alert(
-                  "Confirmar Cancelar",
-                  "Deseja realmente cancelar o pedido?",
-                  [
-                    { text: "Não", style: "cancel" },
-                    {
-                      text: "Sim",
-                      onPress: () => navegacao.navigate("Home"),
-                    },
-                  ]
-                );
-              }}
+              onPress={() => setModalVisible(true)}
+              style={styles.input}
             >
-              <Text style={styles.botaoTexto}>Cancelar</Text>
+              <Text>
+                {produtoSelecionado
+                  ? produtoSelecionado.Produto
+                  : "Clique para selecionar"}
+              </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[styles.botaoCondition, { backgroundColor: "green" }]}
-              onPress={() => {
-                Alert.alert(
-                  "Confirmar Salvar",
-                  `Deseja realmente salvar o pedido no ${formaPagamento}?`,
-                  [
-                    { text: "Não", style: "cancel" },
-                    { text: "Sim", onPress: () => salvarPedido() },
-                  ]
-                );
-              }}
-            >
-              <Text style={styles.botaoTexto}>Salvar Pedido</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Modal funcional de seleção de produto */}
-
-        <Modal
-          visible={modalVisible}
-          animationType="slide"
-          onRequestClose={() => setModalVisible(false)}
-          transparent={Platform.OS === "ios" ? true : false} // TRANSPARENTE SOMENTE NO IOS
-        >
-          <View style={styles.modalOverlay}>
-            <KeyboardAvoidingView
-              behavior={Platform.OS === "ios" ? "padding" : "height"}
-              keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 100}
-              style={styles.modalContainer}
-            >
+            <View style={styles.quantidade}>
+              <Text style={styles.label}>Quantidade</Text>
               <TextInput
-                style={styles.input}
-                placeholder="Digite o nome do produto"
-                value={produtoQuery}
-                onChangeText={(text) => setProdutoQuery(text)}
-                autoFocus
-                returnKeyType="done"
-                onSubmitEditing={Keyboard.dismiss}
+                keyboardType="numeric"
+                style={styles.inputText}
+                placeholder="0"
+                value={quantidade}
+                onChangeText={setQuantidade}
               />
+            </View>
+
+            {produtoSelecionado && quantidade ? (
+              <Text style={styles.total}>
+                Item: R${" "}
+                {(produtoSelecionado["Valor"] * parseInt(quantidade)).toFixed(
+                  2
+                )}
+              </Text>
+            ) : null}
+
+            <TouchableOpacity style={styles.botaoSave} onPress={adicionarItem}>
+              <Text style={styles.botaoTexto}>Adicionar Produto</Text>
+            </TouchableOpacity>
+
+            <View
+              style={{
+                maxHeight: 280,
+                width: "100%",
+              }}
+            >
               <FlatList
-                data={filtrarProdutos(produtoQuery)}
-                keyExtractor={(item) => item.Id.toString()}
-                keyboardShouldPersistTaps="handled"
-                removeClippedSubviews={false}
-                style={styles.listaProdutos}
+                data={itensPedido}
+                keyExtractor={(item) => item.id.toString()}
+                showsVerticalScrollIndicator={true}
+                keyboardShouldPersistTaps="always"
+                keyboardDismissMode="on-drag"
+                contentContainerStyle={{ paddingBottom: 20 }}
+                inverted={true}
+                renderItem={({ item }) => (
+                  <View style={styles.itemLinha}>
+                    <View style={styles.produtoLinha}>
+                      <Text>
+                        {item.quantidade}x - {item.nome} - R${" "}
+                        {item.total.toFixed(2)}
+                      </Text>
+                    </View>
+                    <View style={styles.botaoRemoverProdutoLinha}>
+                      <TouchableOpacity
+                        onPress={() =>
+                          Alert.alert("Cancelar", "Deseja remover este item?", [
+                            { text: "Não", style: "cancel" },
+                            {
+                              text: "Sim",
+                              onPress: () => removerItem(item.id),
+                            },
+                          ])
+                        }
+                      >
+                        <Text style={{ color: "red" }}>Remover</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                )}
+              />
+            </View>
+            <Text style={styles.total}>
+              Total Pedido: R${" "}
+              {itensPedido.reduce((acc, i) => acc + i.total, 0).toFixed(2)}
+            </Text>
+
+            <View style={styles.ultimoContainer}>
+              <Text style={styles.label}>Forma de Pagamento</Text>
+              <FlatList
+                data={["A VISTA", "PIX", "VALE", "CARTÃO", "CHEQUE"]}
+                keyExtractor={(item) => item}
+                horizontal
+                showsHorizontalScrollIndicator={false}
                 renderItem={({ item }) => (
                   <TouchableOpacity
-                    style={styles.sugestaoItem}
-                    onPress={() => {
-                      setProdutoSelecionado(item);
-                      setProdutoQuery(item.Produto);
-                      setModalVisible(false);
-                    }}
+                    style={[
+                      styles.opcaoPagamento,
+                      formaPagamento === item && styles.opcaoSelecionada,
+                    ]}
+                    onPress={() => setFormaPagamento(item)}
                   >
-                    <Text>{item.Produto}</Text>
+                    <Text style={styles.opcaoTexto}>{item}</Text>
                   </TouchableOpacity>
                 )}
-                ListEmptyComponent={
-                  <Text style={{ padding: 10, textAlign: "center" }}>
-                    Nenhum produto encontrado
-                  </Text>
-                }
               />
+            </View>
+            <View style={styles.containerButton}>
+              <TouchableOpacity
+                style={[styles.botaoCondition, { backgroundColor: "red" }]}
+                onPress={() => {
+                  Alert.alert("Cancelar", "Deseja cancelar o pedido?", [
+                    { text: "Não", style: "cancel" },
+                    { text: "Sim", onPress: () => navigation.navigate("Home") },
+                  ]);
+                }}
+              >
+                <Text style={styles.botaoTexto}>Cancelar</Text>
+              </TouchableOpacity>
 
               <TouchableOpacity
-                onPress={() => setModalVisible(false)}
-                style={[styles.botaoSave, { marginTop: 20 }]}
+                style={[styles.botaoCondition, { backgroundColor: "green" }]}
+                onPress={() => {
+                  Alert.alert("Salvar", "Deseja salvar o pedido?", [
+                    { text: "Não", style: "cancel" },
+                    { text: "Sim", onPress: () => salvarPedido() },
+                  ]);
+                }}
               >
-                <Text style={styles.botaoTexto}>Fechar</Text>
+                <Text style={styles.botaoTexto}>Salvar Pedido</Text>
               </TouchableOpacity>
-            </KeyboardAvoidingView>
+            </View>
           </View>
-        </Modal>
-      </SafeAreaView>
-    </KeyboardAvoidingView>
+
+          <ModalSelecionarProduto
+            visible={modalVisible}
+            onClose={() => setModalVisible(false)}
+            produtos={produtos}
+            query={produtoQuery}
+            setQuery={setProdutoQuery}
+            onSelecionar={(item) => {
+              setProdutoSelecionado(item);
+              setProdutoQuery(item.Produto);
+            }}
+          />
+        </SafeAreaView>
+      </KeyboardAvoidingView>
+    </TouchableWithoutFeedback>
   );
 }
 
@@ -319,7 +304,8 @@ const styles = StyleSheet.create({
   label: {
     marginTop: 4,
     marginBottom: 4,
-    fontWeight: "600",
+    fontWeight: "400",
+    fontSize: 12,
   },
   input: {
     borderWidth: 1,
@@ -332,7 +318,7 @@ const styles = StyleSheet.create({
   quantidade: {
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 40,
+    marginTop: 10,
   },
   inputText: {
     borderWidth: 1,
@@ -356,7 +342,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#444",
     padding: 12,
     borderRadius: 8,
-    marginVertical: 10,
+    marginBottom: 20,
+    marginTop: 10,
   },
   botaoCondition: {
     backgroundColor: "#444",
@@ -371,23 +358,25 @@ const styles = StyleSheet.create({
   },
   total: {
     fontWeight: "bold",
-    marginTop: 20,
+    marginTop: 15,
     textAlign: "center",
     fontSize: 18,
-    marginBottom: 20,
+    marginBottom: 10,
   },
   containerButton: {
     flexDirection: "row",
-    justifyContent: "space-evenly",
+    justifyContent: "space-around",
   },
   opcaoPagamento: {
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    height: 40,
+    width: 70,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: "#ccc",
     backgroundColor: "#f9f9f9",
-    marginLeft: 13,
+    marginLeft: 8,
   },
   opcaoSelecionada: {
     backgroundColor: "#4caf50",
@@ -397,28 +386,33 @@ const styles = StyleSheet.create({
     color: "#333",
     fontWeight: "bold",
   },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    backgroundColor: "rgba(0,0,0,0.3)",
+    padding: 20,
+  },
+  modalContainer: {
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    padding: 20,
+    maxHeight: "80%",
+  },
   sugestaoItem: {
     padding: 10,
     borderBottomWidth: 1,
     borderColor: "#eee",
-    backgroundColor: "#fff",
   },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: Platform.OS === "ios" ? "rgba(0,0,0,0.4)" : "#fff", // branco no Android para modal sólida
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 20,
+  ultimoContainer: {
+    alignItems: "flex-start",
+    justifyContent: "flex-start",
+    marginBottom: 15,
+    paddingHorizontal: 5,
   },
-  modalContainer: {
-    width: "100%",
-    maxHeight: "80%",
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    padding: 20,
+  produtoLinha: {
+    width: "83%",
   },
-  listaProdutos: {
-    maxHeight: 250,
-    marginTop: 10,
+  botaoRemoverProdutoLinha: {
+    width: "18%",
   },
 });

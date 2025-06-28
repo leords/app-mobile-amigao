@@ -14,14 +14,14 @@ import {
 } from "react-native";
 import { useAuth } from "../context/AuthContext";
 
-export default function LoginScreen() {
+export default function TelaLogin() {
   const [usuario, setUsuario] = useState();
   const [senha, setSenha] = useState();
-  const [loading, setLoading] = useState(false);
+  const [carregando, setCarregando] = useState(false);
   const { setUser } = useAuth();
 
-  const handleLogin = async () => {
-    setLoading(true);
+  const realizarLogin = async () => {
+    setCarregando(true);
     const resultado = await Login(usuario, senha);
 
     if (resultado.status === "ok") {
@@ -30,27 +30,27 @@ export default function LoginScreen() {
     } else {
       Alert.alert("Erro", resultado.message);
     }
-    setLoading(false);
+    setCarregando(false);
   };
 
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={styles.container}
+      style={estilos.container}
     >
       <ScrollView
-        contentContainerStyle={styles.scrollContainer}
+        contentContainerStyle={estilos.containerScroll}
         keyboardShouldPersistTaps="handled"
       >
         <Image
-          source={require("../assets/logo_name_vertical.png")} // coloque sua imagem aqui
-          style={styles.logo}
+          source={require("../assets/logo_name_vertical.png")}
+          style={estilos.logo}
           resizeMode="contain"
         />
 
         <TextInput
           placeholder="USUÁRIO"
-          style={styles.input}
+          style={estilos.entrada}
           placeholderTextColor="#888"
           value={usuario}
           onChangeText={(text) => setUsuario(text.toUpperCase())}
@@ -58,32 +58,32 @@ export default function LoginScreen() {
         />
         <TextInput
           placeholder="SENHA"
-          style={styles.input}
+          style={estilos.entrada}
           secureTextEntry
           placeholderTextColor="#888"
           value={senha}
           onChangeText={(text) => setSenha(text.toUpperCase())}
           autoCapitalize="characters"
         />
-        {loading ? (
-          <ActivityIndicator size="large" color="red" marginTop="30" />
+        {carregando ? (
+          <ActivityIndicator size="large" color="red" marginTop={30} />
         ) : (
-          <TouchableOpacity onPress={handleLogin} style={styles.button}>
-            <Text style={styles.buttonText}>Entrar</Text>
+          <TouchableOpacity onPress={realizarLogin} style={estilos.botao}>
+            <Text style={estilos.textoBotao}>Entrar</Text>
           </TouchableOpacity>
         )}
       </ScrollView>
-      <Text style={styles.textFooter}>Desenvolvido por Leonardo Rodrigues</Text>
+      <Text style={estilos.rodape}>Desenvolvido por Leonardo Rodrigues</Text>
     </KeyboardAvoidingView>
   );
 }
 
-const styles = StyleSheet.create({
+const estilos = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
   },
-  scrollContainer: {
+  containerScroll: {
     flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",
@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
     height: 200,
     marginBottom: 60,
   },
-  input: {
+  entrada: {
     width: "100%",
     padding: 14,
     marginVertical: 8,
@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     backgroundColor: "#f9f9f9",
   },
-  button: {
+  botao: {
     backgroundColor: "#DC3545",
     padding: 16,
     borderRadius: 8,
@@ -112,12 +112,12 @@ const styles = StyleSheet.create({
     width: "100%",
     alignItems: "center",
   },
-  buttonText: {
+  textoBotao: {
     color: "#fff",
     fontWeight: "bold",
     fontSize: 16,
   },
-  textFooter: {
+  rodape: {
     fontSize: 12,
     color: "grey",
     textAlign: "center",

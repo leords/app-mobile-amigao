@@ -14,133 +14,120 @@ import Constants from "expo-constants";
 export default function Informativo() {
   const { URL_QR_CODE } = Constants.expoConfig.extra;
   const imagem = require("../assets/logo.png");
-  const [loading, setLoading] = useState(true);
+  const [carregando, setCarregando] = useState(true);
   const navigation = useNavigation();
 
-  const openLogout = () => {
+  const abrirLogout = () => {
     navigation.navigate("Logout");
   };
 
   return (
-    <View style={styles.container}>
-      <Cabecalho
-        onPress={""}
-        icone={""} /* enviar o nome do icone a ser renderizado no header */
-        descriptionIcone={""} /* enviar a descrição do botão */
-        image={imagem} /* enviar a imagem */
-      />
+    <View style={estilos.containerTela}>
+      <Cabecalho onPress={""} icone={""} descriptionIcone={""} image={imagem} />
 
       {/* DADOS EMPRESARIAIS */}
-      <View style={styles.section}>
-        <Text style={styles.title}>Dados Empresariais</Text>
-        <View style={styles.infoBlock}>
-          <Text style={styles.label}>Nome da empresa:</Text>
-          <Text style={styles.text}>Amigão Distribuidora de Bebidas</Text>
+      <View style={estilos.secao}>
+        <Text style={estilos.tituloSecao}>Dados Empresariais</Text>
+        <View style={estilos.blocoInformacoes}>
+          <Text style={estilos.etiqueta}>Nome da empresa:</Text>
+          <Text style={estilos.texto}>Amigão Distribuidora de Bebidas</Text>
 
-          <Text style={styles.label}>CNPJ:</Text>
-          <Text style={styles.text}>41.836.758/0001-41</Text>
+          <Text style={estilos.etiqueta}>CNPJ:</Text>
+          <Text style={estilos.texto}>41.836.758/0001-41</Text>
 
-          <Text style={styles.label}>Endereço:</Text>
-          <Text style={styles.text}>
+          <Text style={estilos.etiqueta}>Endereço:</Text>
+          <Text style={estilos.texto}>
             Rua Pastor George Weger, 120 - Centro, 89460-144
           </Text>
 
-          <Text style={styles.label}>Telefones:</Text>
-          <Text style={styles.text}>Fixo: (47) 3622-2148</Text>
-          <Text style={styles.text}>Delivery: (47) 98765-0404</Text>
+          <Text style={estilos.etiqueta}>Telefones:</Text>
+          <Text style={estilos.texto}>Fixo: (47) 3622-2148</Text>
+          <Text style={estilos.texto}>Delivery: (47) 98765-0404</Text>
         </View>
       </View>
 
       {/* DADOS BANCÁRIOS */}
-      <View style={styles.section}>
-        <Text style={styles.title}>Dados Bancários</Text>
+      <View style={estilos.secao}>
+        <Text style={estilos.tituloSecao}>Dados Bancários</Text>
 
-        <View style={styles.bankingInfo}>
-          <View style={styles.containerImage}>
-            {loading ? <ActivityIndicator size="small" color="blue" /> : null}
+        <View style={estilos.linhaDadosBancarios}>
+          <View style={estilos.containerImagemQR}>
+            {carregando ? (
+              <ActivityIndicator size="small" color="blue" />
+            ) : null}
             <Image
-              source={{
-                uri: URL_QR_CODE,
-              }} // Substitua pelo QR code
-              style={styles.qrCode}
-              onLoadEnd={() => setLoading(false)}
+              source={{ uri: URL_QR_CODE }}
+              style={estilos.qrCode}
+              onLoadEnd={() => setCarregando(false)}
             />
           </View>
 
-          <View style={styles.bankDetails}>
-            <Text style={styles.label}>Banco:</Text>
-            <Text style={styles.text}>Bradesco</Text>
+          <View style={estilos.detalhesBanco}>
+            <Text style={estilos.etiqueta}>Banco:</Text>
+            <Text style={estilos.texto}>Bradesco</Text>
 
-            <Text style={styles.label}>Conta:</Text>
-            <Text style={styles.text}>133456-7</Text>
+            <Text style={estilos.etiqueta}>Conta:</Text>
+            <Text style={estilos.texto}>133456-7</Text>
 
-            <Text style={styles.label}>Agência:</Text>
-            <Text style={styles.text}>0001</Text>
+            <Text style={estilos.etiqueta}>Agência:</Text>
+            <Text style={estilos.texto}>0001</Text>
           </View>
         </View>
       </View>
-      <View style={styles.sectionButton}>
-        <TouchableOpacity style={styles.button} onPress={openLogout}>
-          <Text style={styles.textButton}>Sair da minha conta</Text>
+
+      {/* BOTÃO DE SAÍDA */}
+      <View style={estilos.containerBotaoSair}>
+        <TouchableOpacity style={estilos.botaoSair} onPress={abrirLogout}>
+          <Text style={estilos.textoBotaoSair}>Sair da minha conta</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
+const estilos = StyleSheet.create({
+  // Tela principal
+  containerTela: {
     padding: 20,
-    height: "auto",
     backgroundColor: "#fff",
   },
-  section: {
+
+  // Seções de conteúdo
+  secao: {
     marginBottom: 10,
     padding: 15,
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 10,
   },
-  sectionButton: {
-    marginTop: 20,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 15,
-  },
-  containerCompany: {
-    alignItems: "center",
-    justifyContent: "center",
-    flex: 1,
-    flexDirection: "row",
-  },
-  title: {
+
+  // Títulos e textos
+  tituloSecao: {
     fontSize: 18,
     fontWeight: "bold",
     textAlign: "center",
     marginVertical: 1,
   },
-  infoBlock: {
+  blocoInformacoes: {
     marginLeft: 10,
     marginVertical: 5,
   },
-  label: {
+  etiqueta: {
     fontWeight: "600",
     marginTop: 10,
     fontSize: 16,
   },
-  text: {
+  texto: {
     marginLeft: 0,
   },
-  bankingInfo: {
+
+  // Dados bancários
+  linhaDadosBancarios: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
   },
-  containerImage: {
+  containerImagemQR: {
     width: "50%",
     alignItems: "center",
     justifyContent: "center",
@@ -151,14 +138,21 @@ const styles = StyleSheet.create({
     height: 140,
     resizeMode: "contain",
   },
-  bankDetails: {
+  detalhesBanco: {
     width: "50%",
     height: 200,
     alignItems: "flex-start",
     justifyContent: "center",
     paddingLeft: 20,
   },
-  button: {
+
+  // Botão de saída
+  containerBotaoSair: {
+    marginTop: 20,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  botaoSair: {
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "red",
@@ -166,7 +160,7 @@ const styles = StyleSheet.create({
     width: "80%",
     borderRadius: 10,
   },
-  textButton: {
+  textoBotaoSair: {
     fontSize: 16,
     color: "white",
   },

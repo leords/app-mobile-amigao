@@ -5,13 +5,13 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 import BotaoPaginaInicio from "../components/BotaoPaginaInicio";
 
 export default function Menu() {
-  const image = require("../assets/logo_name_horizontal.png");
+  const imagem = require("../assets/logo_name_horizontal.png");
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Image source={image} style={styles.logo} />
+    <View style={estilos.container}>
+      <View style={estilos.cabecalho}>
+        <Image source={imagem} style={estilos.logo} />
       </View>
-      <View style={styles.containerButton}>
+      <View style={estilos.containerBotoes}>
         <BotaoPaginaInicio
           BGcolor={"#F15B6C"}
           destinationPage={"SalesDay"}
@@ -53,16 +53,16 @@ export default function Menu() {
   );
 }
 
-const styles = StyleSheet.create({
+const estilos = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
+  cabecalho: {
     alignItems: "center",
     justifyContent: "center",
     height: "12%",
   },
-  containerButton: {
+  containerBotoes: {
     flex: 1,
     padding: 20,
     flexDirection: "row",

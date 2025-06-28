@@ -3,9 +3,7 @@ import { removerStorage, buscarStorage } from "../storage/ControladorStorage";
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-export const limparStorageComCarga = async (setLoading) => {
-  console.log("entrei no storage");
-  setLoading(true);
+export const limparStorageComCarga = async () => {
   const chaves = [
     "@pedidosLineares",
     "@pedidos",
@@ -31,15 +29,13 @@ export const limparStorageComCarga = async (setLoading) => {
     );
 
     if (todasRemovidas) {
-      Alert.alert("Carga realizada com sucesso!");
-      setLoading(false);
+      console.log("Carga realizada com sucesso!");
     } else {
       console.log(resultados);
       console.warn("Algumas chaves não foram removidas!");
-      setLoading(false);
+      throw new Error("Nem todas as chaves foram removidas corretamente.");
     }
   } catch (error) {
-    console.error("Erro na remoção/verificação das chaves:", error);
-    setLoading(false);
+    throw new Error(`Erro na remoção/verificação das chaves: ${error.message}`);
   }
 };

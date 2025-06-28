@@ -15,57 +15,56 @@ import { removerStorage } from "../storage/ControladorStorage";
 
 export default function Logout() {
   const [senha, setSenha] = useState();
-  const [loading, setLoading] = useState(false);
+  const [carregando, setCarregando] = useState(false);
   const { setUser } = useAuth();
-  const image = require("../assets/logo.png");
+  const imagem = require("../assets/logo.png");
 
-  const Exit = async () => {
+  const sair = async () => {
     try {
-      setLoading(true);
-      const validate = await ValidarAdmin("ADMIN", senha);
+      setCarregando(true);
+      const validacao = await ValidarAdmin("ADMIN", senha);
 
-      if (validate.status === "ADMIN") {
+      if (validacao.status === "ADMIN") {
         await removerStorage("@user");
         setUser(null);
         await removerStorage("@clientes");
-        //await removerStorage("@clientes");
-        setLoading(false);
-        Alert.alert("Usuário desconecado com sucesso!");
+        setCarregando(false);
+        Alert.alert("Usuário desconectado com sucesso!");
       } else {
-        Alert.alert("A senha incorreta!");
-        console.log("A senha incorreta!");
-        setLoading(false);
+        Alert.alert("Senha incorreta!");
+        console.log("Senha incorreta!");
+        setCarregando(false);
       }
     } catch (error) {
-      Alert.alert("erro ao se conectar com o servidor");
-      setLoading(false);
+      Alert.alert("Erro ao se conectar com o servidor");
+      setCarregando(false);
     }
   };
 
   return (
-    <View style={styles.container}>
+    <View style={estilos.container}>
       <Cabecalho
         onPress={""}
-        icone={""} /* enviar o nome do icone a ser renderizado no header */
+        icone={""} /* enviar o nome do ícone a ser renderizado no header */
         descriptionIcone={""} /* enviar a descrição do botão */
-        image={image} /* enviar a imagem */
+        image={imagem} /* enviar a imagem */
       />
-      {loading ? (
-        <ActivityIndicator size="large" color="red" marginTop="30" />
+      {carregando ? (
+        <ActivityIndicator size="large" color="red" marginTop={30} />
       ) : (
-        <View style={styles.password}>
-          <Text style={styles.caption}>
+        <View style={estilos.containerSenha}>
+          <Text style={estilos.legenda}>
             Senha restrita. Solicite autorização ao administrador do sistema.
           </Text>
-          <Text style={styles.title}>Senha admin</Text>
+          <Text style={estilos.titulo}>Senha admin</Text>
           <TextInput
-            style={styles.inputText}
+            style={estilos.entradaTexto}
             value={senha}
             onChangeText={setSenha}
             secureTextEntry
           />
-          <TouchableOpacity style={styles.button} onPress={Exit}>
-            <Text style={styles.text}>Enviar</Text>
+          <TouchableOpacity style={estilos.botao} onPress={sair}>
+            <Text style={estilos.textoBotao}>Enviar</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -73,11 +72,11 @@ export default function Logout() {
   );
 }
 
-const styles = StyleSheet.create({
+const estilos = StyleSheet.create({
   container: {
     padding: 20,
   },
-  password: {
+  containerSenha: {
     alignItems: "center",
     justifyContent: "center",
     marginTop: 100,
@@ -86,21 +85,21 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginHorizontal: 20,
   },
-  caption: {
+  legenda: {
     textAlign: "center",
     marginBottom: 80,
     width: "80%",
   },
-  title: {
+  titulo: {
     fontSize: 16,
     textAlign: "center",
   },
-  text: {
+  textoBotao: {
     fontSize: 16,
     textAlign: "center",
     color: "white",
   },
-  inputText: {
+  entradaTexto: {
     height: 52,
     width: "80%",
     borderWidth: 1,
@@ -110,7 +109,7 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     textAlign: "center",
   },
-  button: {
+  botao: {
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "green",

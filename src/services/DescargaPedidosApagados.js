@@ -27,7 +27,6 @@ export const DescargaPedidosApagados = async () => {
       const todos = [...pedidosApagadorEnviados, ...marcados];
 
       // salvando novamente no storage de pedidosLineares todos os pedidos
-      // await AsyncStorage.setItem("@pedidosLineares", JSON.stringify(todos));
       await salvarStorage("@pedidosLinearesDeletados", todos);
       Alert.alert("Pedidos enviados com sucesso!");
     } catch (error) {
