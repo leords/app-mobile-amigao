@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { NavigationContainer } from "@react-navigation/native";
 import { View, ActivityIndicator } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import { AuthStack } from "./AuthStack";
 import { PrivateStack } from "./PrivateStack";
 import { useAuth } from "../context/AuthContext";
@@ -15,7 +15,7 @@ export const AppNavigator = () => {
     const checkUser = async () => {
       const storedUser = await buscarStorage("@user");
       // valida a existencia
-      if (Array.isArray(storedUser) && storedUser.length > 0) {
+      if (storedUser && typeof storedUser == "string") {
         setUser(storedUser);
         setLoading(false);
       } else {

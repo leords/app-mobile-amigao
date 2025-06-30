@@ -8,26 +8,31 @@ import {
 import { useCallback, useEffect, useState } from "react";
 import { useFocusEffect } from "@react-navigation/native";
 
-export default function PedidoCard({ pedido, index, refs, baixarImagem }) {
+export default function PedidoCard({
+  pedido,
+  index,
+  refs,
+  baixarImagem,
+  apagarPedido,
+}) {
   const [statusPedido, setStatusEnviado] = useState(true);
 
-  const apagarPedido = async (index) => {
-    console.log(pedido);
-    if (index) {
-      await removerPedidoPorIndiceDoStorage(index);
+  // const apagarPedido = async (index) => {
+  //   console.log(pedido);
+  //   if (index) {
+  //     await removerPedidoPorIndiceDoStorage(index);
 
-      /// continuar o processo para enviar para a planilha.
-    } else {
-      Alert.alert("Erro ao encontrar o pedido");
-    }
-  };
+  //     /// continuar o processo para enviar para a planilha.
+  //   } else {
+  //     Alert.alert("Erro ao encontrar o pedido");
+  //   }
+  // };
 
   useFocusEffect(
     useCallback(() => {
       const buscarPedidosLineares = async () => {
+        //coleto o pedidosLineares por causa que são eles que apagamos e deletamos antes de enviar para API.
         const storagePedidosLineares = await buscarStorage("@pedidosLineares");
-
-        console.log(index);
 
         if (Array.isArray(storagePedidosLineares)) {
           const pedidoAtual = storagePedidosLineares[index];

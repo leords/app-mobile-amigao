@@ -22,8 +22,9 @@ export const Login = async (usuario, senha) => {
     console.log("Resposta da API", texto);
 
     if (texto === "ok") {
-      await salvarStorage("@user", usuario);
-      return { status: "ok", usuario };
+      const usuarioLogado = { nome: usuario };
+      await salvarStorage("@user", usuarioLogado.nome);
+      return { status: "ok", usuarioLogado };
     } else {
       await removerStorage("@user");
       return { status: "erro", message: "Usuário não encontrado" };

@@ -1,12 +1,16 @@
 import React, { useEffect, useState, useRef } from "react";
-import { ScrollView, StyleSheet } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import Cabecalho from "../components/Cabecalho";
 import { PermissaoAcessoGaleria } from "../services/PermissaoAcessoGaleria";
-import { buscarStorage } from "../storage/ControladorStorage";
+import {
+  buscarStorage,
+  removerPedidoPorIndiceDoStorage,
+} from "../storage/ControladorStorage";
 import PedidoCard from "../components/PedidoCard";
 
 export default function ListaPedido() {
   const [pedidos, setPedidos] = useState([]);
+  const [atualizar, setAtualizar] = useState(0);
   const imagem = require("../assets/logo.png");
 
   useEffect(() => {
@@ -16,7 +20,7 @@ export default function ListaPedido() {
     }
 
     carregarPedidos();
-  }, []);
+  }, [atualizar]);
 
   const referencias = useRef([]); // array de refs para os pedidos
 
@@ -25,8 +29,19 @@ export default function ListaPedido() {
     await PermissaoAcessoGaleria(refView);
   };
 
+  const apagarPedido = async (index) => {
+    if (index) {
+      await removerPedidoPorIndiceDoStorage(index);
+      // está forma de atualiza, usando prev garante que pegamos o ultimo valor atualizado desse state!!!
+      setAtualizar((prev) => prev + 1);
+      /// continuar o processo para enviar para a planilha.
+    } else {
+      Alert.alert("Erro ao encontrar o pedido");
+    }
+  };
+
   return (
-    <ScrollView style={estilos.containerScroll}>
+    <View style={estilos.container}>
       <Cabecalho
         onPress={() => " "}
         icone={""}
@@ -34,20 +49,26 @@ export default function ListaPedido() {
         image={imagem}
       />
 
-      {pedidos.map((pedido, indice) => (
-        <PedidoCard
-          key={`${pedido.rodape?.[1] ?? 0}-${indice}`}
-          pedido={pedido}
-          index={indice}
-          refs={referencias}
-          baixarImagem={baixarImagem}
-        />
-      ))}
-    </ScrollView>
+      <ScrollView style={estilos.containerScroll}>
+        {pedidos.map((pedido, indice) => (
+          <PedidoCard
+            key={`${pedido.rodape?.[1] ?? 0}-${indice}`}
+            pedido={pedido}
+            index={indice}
+            refs={referencias}
+            baixarImagem={baixarImagem}
+            apagarPedido={apagarPedido}
+          />
+        ))}
+      </ScrollView>
+    </View>
   );
 }
 
 const estilos = StyleSheet.create({
+  container: {
+    height: "92%",
+  },
   containerScroll: {
     padding: 10,
   },

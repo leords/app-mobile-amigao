@@ -11,6 +11,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  Keyboard,
 } from "react-native";
 import { useAuth } from "../context/AuthContext";
 
@@ -21,11 +22,14 @@ export default function TelaLogin() {
   const { setUser } = useAuth();
 
   const realizarLogin = async () => {
+    Keyboard.dismiss();
     setCarregando(true);
-    const resultado = await Login(usuario, senha);
+    const resultado = await Login(usuario.trim(), senha.trim());
+    console.log(resultado);
 
     if (resultado.status === "ok") {
-      setUser(resultado.usuario);
+      console.log("Login correto, retorno: ", resultado.usuarioLogado.nome);
+      setUser(resultado.usuarioLogado.nome);
       Alert.alert("Login efetuado com sucesso");
     } else {
       Alert.alert("Erro", resultado.message);
