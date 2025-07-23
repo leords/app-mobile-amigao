@@ -30,7 +30,7 @@ export default function ListaPedido() {
   };
 
   const apagarPedido = async (index) => {
-    if (index) {
+    if (index !== null) {
       await removerPedidoPorIndiceDoStorage(index);
       // está forma de atualiza, usando prev garante que pegamos o ultimo valor atualizado desse state!!!
       setAtualizar((prev) => prev + 1);
@@ -49,18 +49,38 @@ export default function ListaPedido() {
         image={imagem}
       />
 
-      <ScrollView style={estilos.containerScroll}>
-        {pedidos.map((pedido, indice) => (
-          <PedidoCard
-            key={`${pedido.rodape?.[1] ?? 0}-${indice}`}
-            pedido={pedido}
-            index={indice}
-            refs={referencias}
-            baixarImagem={baixarImagem}
-            apagarPedido={apagarPedido}
-          />
-        ))}
-      </ScrollView>
+      {pedidos ? (
+        <ScrollView style={estilos.containerScroll}>
+          {pedidos.map((pedido, indice) => {
+            try {
+              return (
+                <PedidoCard
+                  key={`${pedido.rodape?.[1] ?? 0}-${indice}`}
+                  pedido={pedido}
+                  index={indice}
+                  refs={referencias}
+                  baixarImagem={baixarImagem}
+                  apagarPedido={apagarPedido}
+                />
+              );
+            } catch (err) {
+              console.error("Erro ao renderizar pedido:", err);
+              return <Text>Erro no pedido #{indice}</Text>;
+            }
+          })}
+        </ScrollView>
+      ) : (
+        <Text
+          style={{
+            textAlign: "center",
+            marginTop: 60,
+            fontSize: 16,
+            fontWeight: 400,
+          }}
+        >
+          Ops! Ainda não temos pedidos feitos hoje.
+        </Text>
+      )}
     </View>
   );
 }
@@ -68,6 +88,7 @@ export default function ListaPedido() {
 const estilos = StyleSheet.create({
   container: {
     height: "92%",
+    padding: 16,
   },
   containerScroll: {
     padding: 10,

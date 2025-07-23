@@ -7,7 +7,6 @@ import {
   Text,
 } from "react-native";
 import VendaCard from "../components/VendaCard";
-import colors from "../styles/colors";
 import Cabecalho from "../components/Cabecalho";
 import { useAuth } from "../context/AuthContext";
 import { buscarVendasDaAPI } from "../services/VendasService";
@@ -26,7 +25,7 @@ export default function Vendas() {
     const buscarVendas = async () => {
       try {
         await buscarVendasDaAPI(
-          user,
+          user == "ADMIN" ? null : user,
           setVendas,
           setLoading,
           setRecarregar,
@@ -43,7 +42,14 @@ export default function Vendas() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator
+          size="large"
+          color={"#EF3C28"}
+          style={styles.loader}
+        />
+        <Text style={styles.texto}>
+          Buscando o total de vendas dos últimos 7 dias...
+        </Text>
       </View>
     );
   }
@@ -51,7 +57,7 @@ export default function Vendas() {
   if (erro) {
     return (
       <View style={styles.center}>
-        <Text style={{ color: colors.danger }}>{erro}</Text>
+        <Text style={{ color: "red" }}>{erro}</Text>
       </View>
     );
   }
@@ -85,11 +91,20 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: colors.background,
   },
   center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+  },
+  texto: {
+    fontSize: 16,
+    fontWeight: 400,
+    marginTop: 60,
+    paddingHorizontal: 60,
+    textAlign: "center",
+  },
+  loader: {
+    marginTop: 80,
   },
 });

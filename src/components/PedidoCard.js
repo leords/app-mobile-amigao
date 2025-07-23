@@ -1,11 +1,8 @@
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import {
-  buscarStorage,
-  removerPedidoPorIndiceDoStorage,
-} from "../storage/ControladorStorage";
-import { useCallback, useEffect, useState } from "react";
+import { buscarStorage } from "../storage/ControladorStorage";
+import { useCallback, useState } from "react";
 import { useFocusEffect } from "@react-navigation/native";
 
 export default function PedidoCard({
@@ -16,17 +13,6 @@ export default function PedidoCard({
   apagarPedido,
 }) {
   const [statusPedido, setStatusEnviado] = useState(true);
-
-  // const apagarPedido = async (index) => {
-  //   console.log(pedido);
-  //   if (index) {
-  //     await removerPedidoPorIndiceDoStorage(index);
-
-  //     /// continuar o processo para enviar para a planilha.
-  //   } else {
-  //     Alert.alert("Erro ao encontrar o pedido");
-  //   }
-  // };
 
   useFocusEffect(
     useCallback(() => {

@@ -1,4 +1,3 @@
-import colors from "../styles/colors";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { View, StyleSheet, Text, TouchableOpacity, Image } from "react-native";
 import { useNavigation } from "@react-navigation/native";
@@ -44,7 +43,7 @@ const styles = StyleSheet.create({
   button: {
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: colors.primary,
+    shadowColor: "#0D6EFD",
   },
   buttonText: {
     fontSize: 10,

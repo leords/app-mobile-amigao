@@ -30,6 +30,7 @@ export const limparStorageComCarga = async () => {
 
     if (todasRemovidas) {
       console.log("Carga realizada com sucesso!");
+      //Alert.alert("Carga em andanmento!");
     } else {
       console.log(resultados);
       console.warn("Algumas chaves não foram removidas!");

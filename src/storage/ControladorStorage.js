@@ -68,8 +68,11 @@ export const removerPedidoPorIndiceDoStorage = async (indice) => {
       return;
     }
 
+    console.log("indice", indice);
+
     if (indice < 0 || indice >= pedidos.length) {
       console.warn("Índice inválido.");
+      console.log("Índice inválido.");
       return;
     }
 
@@ -83,6 +86,8 @@ export const removerPedidoPorIndiceDoStorage = async (indice) => {
       (_, i) => i !== indice
     );
     await salvarStorage("@pedidosLineares", pedidosLinearesAtualizados);
+
+    // em ultimos caso, caso haver apenas 1 pedido na lista no momento de deletar o pedido, apagar o storage inteiro!!!!!
 
     //cria um historico de pedidos que foram deletados.
     const pedidosDeletadosAnteriores = await buscarStorage("@pedidosDeletados");

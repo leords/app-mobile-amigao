@@ -8,6 +8,7 @@ import ListaPedido from "../screens/ListaPedido";
 import Sincronizacao from "../screens/Sincronizacao";
 import Pedido from "../screens/NovoPedido";
 import Logout from "../screens/Logout";
+import GerarQRCode from "../screens/GerarQRCode";
 
 export const PrivateStack = () => {
   const Stack = createNativeStackNavigator();
@@ -23,6 +24,7 @@ export const PrivateStack = () => {
       <Stack.Screen name="ListOrder" component={ListaPedido} />
       <Stack.Screen name="Communication" component={Sincronizacao} />
       <Stack.Screen name="Logout" component={Logout} />
+      <Stack.Screen name="GerarQRCode" component={GerarQRCode} />
     </Stack.Navigator>
   );
 };

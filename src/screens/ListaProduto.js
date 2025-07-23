@@ -47,7 +47,8 @@ export default function ListaProduto() {
     const texto = busca.toLowerCase();
     const filtrados = produtos.filter(
       (p) =>
-        typeof p.Produto === "string" && p.Produto.toLowerCase().includes(texto)
+        typeof p?.Produto === "string" &&
+        p.Produto.toLowerCase().includes(texto)
     );
     setProdutosFiltrados(filtrados);
   };

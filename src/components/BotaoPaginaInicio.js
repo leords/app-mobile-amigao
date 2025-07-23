@@ -23,12 +23,12 @@ export default function BotaoPaginaInicio({
 const styles = StyleSheet.create({
   button: {
     width: "48%", // Para caber 2 por linha com margem
-    height: "150",
-    borderRadius: 30,
+    height: 140,
+    borderRadius: 10,
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 18,
-    marginBottom: 2,
+    padding: 12,
+    marginBottom: 0,
   },
   iconWrapper: {
     width: "100%",

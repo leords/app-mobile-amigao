@@ -1,7 +1,8 @@
-import { View, StyleSheet, Image, Text } from "react-native";
+import { View, StyleSheet, Image } from "react-native";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import Entypo from "@expo/vector-icons/Entypo";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
+import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import BotaoPaginaInicio from "../components/BotaoPaginaInicio";
 
 export default function Menu() {
@@ -13,40 +14,46 @@ export default function Menu() {
       </View>
       <View style={estilos.containerBotoes}>
         <BotaoPaginaInicio
-          BGcolor={"#F15B6C"}
+          BGcolor={"#4A4A4A"}
           destinationPage={"SalesDay"}
           image={<FontAwesome name="bar-chart" size={30} color="white" />}
           name={"Minhas vendas"}
         />
         <BotaoPaginaInicio
-          BGcolor={"#3A5AFF"}
+          BGcolor={"#FFA500"}
           destinationPage={"Client"}
           image={<Entypo name="address" size={32} color="white" />}
           name={"Minha rota"}
         />
         <BotaoPaginaInicio
-          BGcolor={"#AF52DE"}
+          BGcolor={"#F26B1D"}
           destinationPage={"Product"}
           image={<Entypo name="dropbox" size={32} color="white" />}
           name={"Produtos"}
         />
         <BotaoPaginaInicio
-          BGcolor={"orange"}
+          BGcolor={"#EF3C28"}
           destinationPage={"ListOrder"}
           image={<FontAwesome name="list-ol" size={30} color="white" />}
           name={"Meus pedidos"}
         />
         <BotaoPaginaInicio
-          BGcolor={"#6C757D"}
+          BGcolor={"#4A4A4A"}
           destinationPage={"Info"}
           image={<AntDesign name="idcard" size={32} color="white" />}
           name={"Informações"}
         />
         <BotaoPaginaInicio
-          BGcolor={"#3A5AFF"}
+          BGcolor={"#FFA500"}
           destinationPage={"Communication"}
           image={<AntDesign name="cloudupload" size={34} color="white" />}
           name={"Comunicação"}
+        />
+        <BotaoPaginaInicio
+          BGcolor={"#F26B1D"}
+          destinationPage={"GerarQRCode"}
+          image={<FontAwesome6 name="pix" size={34} color="white" />}
+          name={"Gerar pagamentos"}
         />
       </View>
     </View>

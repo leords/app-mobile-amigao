@@ -27,7 +27,7 @@ export default ({ config }) => ({
       "ACCESS_FINE_LOCATION",
     ],
     adaptiveIcon: {
-      foregroundImage: "./src/assets/logo.png",
+      foregroundImage: "./src/assets/logoMin.png",
       backgroundColor: "#ffffff",
     },
     edgeToEdgeEnabled: true,

@@ -28,8 +28,6 @@ export const DescargaGPS = async () => {
 
       // salvando novamente no storage de pedidosLineares todos os pedidos
       await salvarStorage("@gps", todos);
-
-      Alert.alert("Pedidos enviados com sucesso!");
     } catch (error) {
       console.error("Erro ao enviar GPS:", error);
       Alert.alert("Erro ao enviar alguns GPS.");

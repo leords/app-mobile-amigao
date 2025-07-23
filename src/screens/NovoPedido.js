@@ -54,21 +54,12 @@ export default function Pedido() {
     carregarProdutos();
   }, []);
 
-  const filtrarProdutos = (query) => {
-    if (!query) return [];
-    return produtos.filter(
-      (p) =>
-        p?.Produto &&
-        typeof p.Produto === "string" &&
-        p.Produto.toLowerCase().includes(query.toLowerCase())
-    );
-  };
-
   const adicionarItem = () => {
     if (!produtoSelecionado || !quantidade) return;
-
+    Keyboard.dismiss();
     const preco = parseFloat(produtoSelecionado["Valor"]);
-    const qtd = parseInt(quantidade);
+    // usado replace para alterar de virgula para ponto!!!
+    const qtd = parseFloat(quantidade.replace(",", "."));
     const total = preco * qtd;
 
     const novoItem = {
@@ -143,6 +134,7 @@ export default function Pedido() {
       >
         <SafeAreaView style={{ flex: 1 }}>
           <View style={[styles.container, { flex: 1 }]}>
+            {/* TOPO FIXO */}
             <Text style={styles.titulo}>CLIENTE {cliente.Cliente}</Text>
 
             <Text style={styles.label}>Selecione o produto</Text>
@@ -170,9 +162,13 @@ export default function Pedido() {
 
             {produtoSelecionado && quantidade ? (
               <Text style={styles.total}>
-                Item: R${" "}
-                {(produtoSelecionado["Valor"] * parseInt(quantidade)).toFixed(
-                  2
+                Item:{" "}
+                {new Intl.NumberFormat("pt-BR", {
+                  style: "currency",
+                  currency: "BRL",
+                }).format(
+                  parseFloat((quantidade || "0").replace(",", ".")) *
+                    parseFloat(produtoSelecionado["Valor"] || 0)
                 )}
               </Text>
             ) : null}
@@ -181,47 +177,44 @@ export default function Pedido() {
               <Text style={styles.botaoTexto}>Adicionar Produto</Text>
             </TouchableOpacity>
 
-            <View
-              style={{
-                maxHeight: 280,
-                width: "100%",
-              }}
-            >
-              <FlatList
-                data={itensPedido}
-                keyExtractor={(item) => item.id.toString()}
-                showsVerticalScrollIndicator={true}
-                keyboardShouldPersistTaps="always"
-                keyboardDismissMode="on-drag"
-                contentContainerStyle={{ paddingBottom: 20 }}
-                inverted={true}
-                renderItem={({ item }) => (
-                  <View style={styles.itemLinha}>
-                    <View style={styles.produtoLinha}>
-                      <Text>
-                        {item.quantidade}x - {item.nome} - R${" "}
-                        {item.total.toFixed(2)}
-                      </Text>
-                    </View>
-                    <View style={styles.botaoRemoverProdutoLinha}>
-                      <TouchableOpacity
-                        onPress={() =>
-                          Alert.alert("Cancelar", "Deseja remover este item?", [
-                            { text: "Não", style: "cancel" },
-                            {
-                              text: "Sim",
-                              onPress: () => removerItem(item.id),
-                            },
-                          ])
-                        }
-                      >
-                        <Text style={{ color: "red" }}>Remover</Text>
-                      </TouchableOpacity>
-                    </View>
+            {/* LISTA ROLÁVEL */}
+            <FlatList
+              data={itensPedido}
+              keyExtractor={(item) => item.id.toString()}
+              showsVerticalScrollIndicator={true}
+              scrollEnabled={true}
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="on-drag"
+              contentContainerStyle={{ paddingBottom: 20 }}
+              style={{ flex: 1 }} // 👈 rola apenas a FlatList
+              renderItem={({ item }) => (
+                <View style={styles.itemLinha}>
+                  <View style={styles.produtoLinha}>
+                    <Text>
+                      {item.quantidade}x - {item.nome} - R${" "}
+                      {item.total.toFixed(2)}
+                    </Text>
                   </View>
-                )}
-              />
-            </View>
+                  <View style={styles.botaoRemoverProdutoLinha}>
+                    <TouchableOpacity
+                      onPress={() =>
+                        Alert.alert("Cancelar", "Deseja remover este item?", [
+                          { text: "Não", style: "cancel" },
+                          {
+                            text: "Sim",
+                            onPress: () => removerItem(item.id),
+                          },
+                        ])
+                      }
+                    >
+                      <Text style={{ color: "red" }}>Remover</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+            />
+
+            {/* RODAPÉ FIXO */}
             <Text style={styles.total}>
               Total Pedido: R${" "}
               {itensPedido.reduce((acc, i) => acc + i.total, 0).toFixed(2)}
@@ -230,7 +223,7 @@ export default function Pedido() {
             <View style={styles.ultimoContainer}>
               <Text style={styles.label}>Forma de Pagamento</Text>
               <FlatList
-                data={["A VISTA", "PIX", "VALE", "CARTÃO", "CHEQUE"]}
+                data={["A VISTA", "PIX", "VALE", "CARTÃO", "BOLETO", "CHEQUE"]}
                 keyExtractor={(item) => item}
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -247,19 +240,22 @@ export default function Pedido() {
                 )}
               />
             </View>
+
             <View style={styles.containerButton}>
               <TouchableOpacity
                 style={[styles.botaoCondition, { backgroundColor: "red" }]}
                 onPress={() => {
                   Alert.alert("Cancelar", "Deseja cancelar o pedido?", [
                     { text: "Não", style: "cancel" },
-                    { text: "Sim", onPress: () => navigation.navigate("Home") },
+                    {
+                      text: "Sim",
+                      onPress: () => navigation.navigate("Client"),
+                    },
                   ]);
                 }}
               >
                 <Text style={styles.botaoTexto}>Cancelar</Text>
               </TouchableOpacity>
-
               <TouchableOpacity
                 style={[styles.botaoCondition, { backgroundColor: "green" }]}
                 onPress={() => {
@@ -274,6 +270,7 @@ export default function Pedido() {
             </View>
           </View>
 
+          {/* MODAL PRODUTO */}
           <ModalSelecionarProduto
             visible={modalVisible}
             onClose={() => setModalVisible(false)}
@@ -282,7 +279,7 @@ export default function Pedido() {
             setQuery={setProdutoQuery}
             onSelecionar={(item) => {
               setProdutoSelecionado(item);
-              setProdutoQuery(item.Produto);
+              setProdutoQuery(String(item.Produto));
             }}
           />
         </SafeAreaView>

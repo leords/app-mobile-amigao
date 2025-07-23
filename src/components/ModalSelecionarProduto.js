@@ -22,13 +22,12 @@ export default function ModalSelecionarProduto({
   onSelecionar,
 }) {
   const filtrarProdutos = (busca) => {
-    if (!busca) return [];
-    return produtos.filter(
-      (p) =>
-        p?.Produto &&
-        typeof p.Produto === "string" &&
-        p.Produto.toLowerCase().includes(busca.toLowerCase())
-    );
+    if (!busca || busca.trim() === "") return produtos;
+
+    return produtos.filter((p) => {
+      const nome = String(p?.Produto ?? "").toLowerCase();
+      return nome.includes(busca.toLowerCase());
+    });
   };
 
   return (
@@ -45,7 +44,7 @@ export default function ModalSelecionarProduto({
               style={styles.input}
               placeholder="Digite o nome do produto"
               value={query}
-              onChangeText={setQuery}
+              onChangeText={(text) => setQuery(String(text))} //forçando uma string
               autoFocus
               returnKeyType="done"
             />

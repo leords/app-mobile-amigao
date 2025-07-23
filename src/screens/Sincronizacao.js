@@ -22,6 +22,7 @@ import { buscarProdutosDaAPI } from "../services/ProdutosService";
 export default function Sincronizacao() {
   const [pedidos, setPedidos] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [remetenteLoading, setRemetente] = useState("");
   const [produtos, setProdutos] = useState([]);
   const [clientes, setClientes] = useState([]);
   const navegacao = useNavigation();
@@ -31,6 +32,7 @@ export default function Sincronizacao() {
     buscarPedidos();
   }, []);
 
+  // Está função busca pedidos no Storaged
   const buscarPedidos = async () => {
     const dados = await buscarStorage("@pedidosLineares");
     if (dados) setPedidos(dados);
@@ -40,6 +42,7 @@ export default function Sincronizacao() {
   const tentarEnviarPedidos = async () => {
     const online = await testeConexao();
     if (!online) {
+      setLoading(false);
       Alert.alert(
         "Sem conexão com a internet. Tente novamente assim que se conectar à internet."
       );
@@ -51,10 +54,12 @@ export default function Sincronizacao() {
       // Descarrega o array de GPS.
       await DescargaGPS();
 
-      Alert.alert("Pedidos enviando com sucesso!");
+      Alert.alert("Pedidos enviado com sucesso!");
     } catch (error) {
       console.log("Erro ao enviar os pedidos!", error);
       Alert.alert("Erro ao enviar os pedidos. Tente novamente!");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -63,8 +68,10 @@ export default function Sincronizacao() {
     const existePedido = pedidos.some(
       (pedido) => pedido?.[0]?.[0] ?? null === pegarDataAtual()
     );
-    console.log("validacao: ", existePedido);
+
     if (existePedido) {
+      setRemetente("descarga");
+      setLoading(true);
       await tentarEnviarPedidos();
     } else {
       Alert.alert("você não tem nenhum pedido com a data de hoje");
@@ -74,6 +81,7 @@ export default function Sincronizacao() {
   // essa função valida a carga do aplicativo, zerando pedidos e recarregando produtos e clientes.
   const validarCarga = async () => {
     try {
+      setRemetente("carga");
       setLoading(true);
       await limparStorageComCarga();
 
@@ -98,8 +106,7 @@ export default function Sincronizacao() {
       } catch (error) {
         throw error;
       }
-
-      setLoading(false);
+      Alert.alert("Carga realizada com sucesso!");
     } catch (error) {
       console.log(error);
       Alert.alert(error);
@@ -119,11 +126,28 @@ export default function Sincronizacao() {
         image={imagem}
       />
       {loading ? (
-        <ActivityIndicator size="large" color="red" marginTop="30" />
+        <>
+          <ActivityIndicator
+            size="large"
+            color="red"
+            marginTop="30"
+            style={styles.loader}
+          />
+          <Text
+            style={{
+              textAlign: "center",
+              marginTop: 60,
+              fontSize: 16,
+              fontWeight: 400,
+            }}
+          >
+            Processo de {remetenteLoading} em andamento, aguarde um instante...
+          </Text>
+        </>
       ) : (
         <View style={styles.containerBotao}>
           <TouchableOpacity
-            style={[styles.botao, { backgroundColor: "#5dc770" }]}
+            style={[styles.botao, { backgroundColor: "#EF3C28" }]}
             onPress={() => {
               Alert.alert("Confirmar Carga", "Deseja realmente dar carga?", [
                 { text: "Não", style: "cancel" },
@@ -138,7 +162,7 @@ export default function Sincronizacao() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.botao, { backgroundColor: "#2498e8" }]}
+            style={[styles.botao, { backgroundColor: "#5dc770" }]} //#EF3C28
             onPress={() => {
               Alert.alert(
                 "Confirmar Descarga",
@@ -184,5 +208,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 500,
     marginTop: 10,
+  },
+  loader: {
+    marginTop: 100,
   },
 });
