@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   View,
   TextInput,
@@ -14,7 +14,7 @@ import { buscarStorage } from "../storage/ControladorStorage";
 export default function ListaProduto() {
   const [produtos, setProdutos] = useState([]);
   const [busca, setBusca] = useState("");
-  const [produtosFiltrados, setProdutosFiltrados] = useState([]);
+  //const [produtosFiltrados, setProdutosFiltrados] = useState([]);
   const [carregando, setCarregando] = useState(false);
 
   const imagem = require("../assets/vasilhames.png");
@@ -23,9 +23,9 @@ export default function ListaProduto() {
     carregarProdutosLocais();
   }, []);
 
-  useEffect(() => {
+  /*   useEffect(() => {
     filtrarProdutos();
-  }, [busca, produtos]);
+  }, [busca, produtos]); */
 
   const carregarProdutosLocais = async () => {
     try {
@@ -42,16 +42,26 @@ export default function ListaProduto() {
       setCarregando(false);
     }
   };
-
-  const filtrarProdutos = () => {
+  // hook useMemo é usado para memorizar valores calculados. evitando calculos toda vez que o componente renderizar
+  // só recalcula caso produtos ou busca, tenha algum tipo de alteração.
+  const produtosFiltrados = useMemo(() => {
     const texto = busca.toLowerCase();
-    const filtrados = produtos.filter(
+    return produtos.filter(
       (p) =>
         typeof p?.Produto === "string" &&
         p.Produto.toLowerCase().includes(texto)
     );
-    setProdutosFiltrados(filtrados);
-  };
+  }, [produtos, busca]);
+
+  // const filtrarProdutos = () => {
+  //   const texto = busca.toLowerCase();
+  //   const filtrados = produtos.filter(
+  //     (p) =>
+  //       typeof p?.Produto === "string" &&
+  //       p.Produto.toLowerCase().includes(texto)
+  //   );
+  //   setProdutosFiltrados(filtrados);
+  // };
 
   const renderizarItem = ({ item }) => (
     <View style={estilos.item}>

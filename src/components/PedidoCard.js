@@ -4,14 +4,12 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { buscarStorage } from "../storage/ControladorStorage";
 import { useCallback, useState } from "react";
 import { useFocusEffect } from "@react-navigation/native";
+import React from "react";
 
-export default function PedidoCard({
-  pedido,
-  index,
-  refs,
-  baixarImagem,
-  apagarPedido,
-}) {
+// Componente exportado como Reac.memo, evita que o mesmo
+// seja re-renderizado caso não haja nenhuma alteração em suas props.
+
+function PedidoCard({ pedido, index, refs, baixarImagem, apagarPedido }) {
   const [statusPedido, setStatusEnviado] = useState(true);
 
   useFocusEffect(
@@ -253,3 +251,5 @@ const styles = StyleSheet.create({
     paddingBottom: 5,
   },
 });
+
+export default React.memo(PedidoCard);

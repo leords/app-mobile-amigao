@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -17,7 +17,7 @@ import { useAuth } from "../context/AuthContext";
 export default function ListaCliente() {
   const [clientes, setClientes] = useState([]);
   const [busca, setBusca] = useState("");
-  const [clientesFiltrados, setClientesFiltrados] = useState([]);
+  //const [clientesFiltrados, setClientesFiltrados] = useState([]);
   const [positivados, setPositivados] = useState([]);
   const [atualizarPositivacao, setAtualizarPositivacao] = useState(false);
   const [carregando, setCarregando] = useState(false);
@@ -33,9 +33,9 @@ export default function ListaCliente() {
     }, [])
   );
 
-  useEffect(() => {
+  /*   useEffect(() => {
     filtrarClientes();
-  }, [busca, clientes]);
+  }, [busca, clientes]); */
 
   useFocusEffect(
     useCallback(() => {
@@ -71,15 +71,22 @@ export default function ListaCliente() {
       setCarregando(false);
     }
   };
+  const clientesFiltrados = useMemo(() => {
+    const texto = busca.toLowerCase();
+    return clientes.filter(
+      (p) =>
+        typeof p.Cliente === "string" && p.Cliente.toLowerCase().includes(texto)
+    );
+  }, [busca, clientes]);
 
-  const filtrarClientes = () => {
+  /*   const filtrarClientes = () => {
     const texto = busca.toLowerCase();
     const filtrados = clientes.filter(
       (p) =>
         typeof p.Cliente === "string" && p.Cliente.toLowerCase().includes(texto)
     );
     setClientesFiltrados(filtrados);
-  };
+  }; */
 
   const renderizarItem = ({ item }) => {
     const positivou = positivados?.some(

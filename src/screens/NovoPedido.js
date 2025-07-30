@@ -83,6 +83,10 @@ export default function Pedido() {
   };
 
   const salvarPedido = async () => {
+    if (!itensPedido.length) {
+      Alert.alert("Adicione pelo menos um item ao pedido.");
+      return;
+    }
     const dataAtual = new Date();
 
     const cabecalho = [
@@ -123,6 +127,9 @@ export default function Pedido() {
     setProdutoQuery("");
     setQuantidade("");
     setModalVisible(false);
+
+    Alert.alert("Sucesso", "Pedido salvo com sucesso.");
+    navigation.navigate("ListOrder");
   };
 
   return (

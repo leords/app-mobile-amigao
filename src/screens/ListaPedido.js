@@ -91,7 +91,7 @@ const estilos = StyleSheet.create({
     padding: 16,
   },
   containerScroll: {
-    padding: 10,
+    padding: 2,
   },
   caixaPedido: {
     marginBottom: 24,

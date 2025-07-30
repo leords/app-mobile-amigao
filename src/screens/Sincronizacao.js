@@ -60,6 +60,12 @@ export default function Sincronizacao() {
       Alert.alert("Erro ao enviar os pedidos. Tente novamente!");
     } finally {
       setLoading(false);
+      console.log("Loading Desativado:", loading);
+
+      navegacao.reset({
+        index: 0,
+        routes: [{ name: "Home" }],
+      });
     }
   };
 
@@ -112,6 +118,10 @@ export default function Sincronizacao() {
       Alert.alert(error);
     } finally {
       setLoading(false);
+      navegacao.reset({
+        index: 0,
+        routes: [{ name: "Home" }],
+      });
     }
   };
 
