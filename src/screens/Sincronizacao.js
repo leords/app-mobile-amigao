@@ -18,15 +18,16 @@ import { buscarStorage } from "../storage/ControladorStorage";
 import { limparStorageComCarga } from "../services/LimparStorageComCarga";
 import { buscarClientesDaAPI } from "../services/ClientesService";
 import { buscarProdutosDaAPI } from "../services/ProdutosService";
+import { useAuth } from "../context/AuthContext";
 
 export default function Sincronizacao() {
   const [pedidos, setPedidos] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [remetenteLoading, setRemetente] = useState("");
   const [produtos, setProdutos] = useState([]);
   const [clientes, setClientes] = useState([]);
   const navegacao = useNavigation();
   const imagem = require("../assets/logo.png");
+  const { sincronizando, setSincronizando } = useAuth();
 
   useEffect(() => {
     buscarPedidos();
@@ -42,7 +43,7 @@ export default function Sincronizacao() {
   const tentarEnviarPedidos = async () => {
     const online = await testeConexao();
     if (!online) {
-      setLoading(false);
+      setSincronizando(false);
       Alert.alert(
         "Sem conexão com a internet. Tente novamente assim que se conectar à internet."
       );
@@ -59,9 +60,7 @@ export default function Sincronizacao() {
       console.log("Erro ao enviar os pedidos!", error);
       Alert.alert("Erro ao enviar os pedidos. Tente novamente!");
     } finally {
-      setLoading(false);
-      console.log("Loading Desativado:", loading);
-
+      setSincronizando(false);
       navegacao.reset({
         index: 0,
         routes: [{ name: "Home" }],
@@ -71,16 +70,20 @@ export default function Sincronizacao() {
 
   // essa função valida se dentro do array tem algum item com a data igual a atual e retorna true!
   const validarDescarga = async () => {
-    const existePedido = pedidos.some(
-      (pedido) => pedido?.[0]?.[0] ?? null === pegarDataAtual()
-    );
+    // verifica se tem pedidos não enviados
+    const existePedidoNaoEnviado = pedidos.some((pedido) => !pedido.enviado);
 
-    if (existePedido) {
+    // verifica se pedidos com a data de hoje
+    // const existePedido = pedidos.some(
+    //  (pedido) => pedido?.[0]?.[0] ?? null === pegarDataAtual()
+    // );
+
+    if (existePedidoNaoEnviado) {
       setRemetente("descarga");
-      setLoading(true);
+      setSincronizando(true);
       await tentarEnviarPedidos();
     } else {
-      Alert.alert("você não tem nenhum pedido com a data de hoje");
+      Alert.alert("Não há pedidos pendentes para envio.");
     }
   };
 
@@ -88,7 +91,7 @@ export default function Sincronizacao() {
   const validarCarga = async () => {
     try {
       setRemetente("carga");
-      setLoading(true);
+      setSincronizando(true);
       await limparStorageComCarga();
 
       try {
@@ -117,7 +120,7 @@ export default function Sincronizacao() {
       console.log(error);
       Alert.alert(error);
     } finally {
-      setLoading(false);
+      setSincronizando(false);
       navegacao.reset({
         index: 0,
         routes: [{ name: "Home" }],
@@ -135,7 +138,7 @@ export default function Sincronizacao() {
         descriptionIcone={""}
         image={imagem}
       />
-      {loading ? (
+      {sincronizando ? (
         <>
           <ActivityIndicator
             size="large"

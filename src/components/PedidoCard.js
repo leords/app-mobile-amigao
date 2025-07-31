@@ -194,6 +194,7 @@ const styles = StyleSheet.create({
   tabelaTitulos: {
     flexDirection: "row",
     justifyContent: "space-between",
+    paddingHorizontal: 2,
     marginBottom: 10,
   },
   colunaTitulo: {
@@ -203,19 +204,20 @@ const styles = StyleSheet.create({
   },
   itemLinha: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "center",
     marginBottom: 10,
     width: "100%",
-    padding: 4,
+
+    gap: 12,
   },
   itemQtd: {
     fontSize: 12,
-    width: "5%",
+    width: "10%",
     color: "#494747",
   },
   itemNome: {
     fontSize: 12,
-    width: "50%",
+    width: "35%",
     color: "#494747",
   },
   itemPreco: {
@@ -226,7 +228,7 @@ const styles = StyleSheet.create({
   },
   itemTotal: {
     fontSize: 12,
-    width: "20%",
+    width: "22%",
     textAlign: "right",
     color: "#494747",
   },

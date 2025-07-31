@@ -129,7 +129,7 @@ export default function Pedido() {
     setModalVisible(false);
 
     Alert.alert("Sucesso", "Pedido salvo com sucesso.");
-    navigation.navigate("ListOrder");
+    navigation.navigate("Client");
   };
 
   return (
