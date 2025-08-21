@@ -115,9 +115,16 @@ export default function Pedido() {
       rodape,
     };
 
+    // criar um metadados para resolver a questão do ID único.
+    // ...
+
     const callbackPedidos = criarCallbackAdicionarPedido(pedidoFinal);
     await atualizarStorage("@pedidos", callbackPedidos);
-    await GpsCliente(pedidoFinal);
+
+    // deixando para coletar o GPS em segunda plano.
+    GpsCliente(pedidoFinal).catch((e) =>
+      console.log("Erro no envio de GPS (em background):", e)
+    );
 
     const callbackPedidosLineares = criarCallbackAdicionarPedido(linhaFinal);
     await atualizarStorage("@pedidosLineares", callbackPedidosLineares);

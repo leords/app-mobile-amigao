@@ -5,6 +5,7 @@ import { salvarStorage } from "../storage/ControladorStorage";
 
 export const DescargaGPS = async () => {
   // busca pedidos salvos no storage
+
   const listGPS = JSON.parse(await AsyncStorage.getItem("@gps")) || [];
 
   // separar pedidos
@@ -16,6 +17,7 @@ export const DescargaGPS = async () => {
     try {
       console.log(`Enviando ${GPSNaoEnviados.length} pedidos...`);
       // enviando para a requisição
+
       await EnviarSolicitacaoGPSPlanilha(GPSNaoEnviados);
 
       // marca todos os pedidos do array pedidosNaoEnviados como enviados.
@@ -27,10 +29,11 @@ export const DescargaGPS = async () => {
       const todos = [...GPSEnviados, ...marcados];
 
       // salvando novamente no storage de pedidosLineares todos os pedidos
+
       await salvarStorage("@gps", todos);
     } catch (error) {
       console.error("Erro ao enviar GPS:", error);
-      Alert.alert("Erro ao enviar alguns GPS.");
+      console.log("Nenhum GPS novo para enviar.");
     }
   } else {
     Alert.alert("Nenhum GPS novo para enviar.");
