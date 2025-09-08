@@ -16,12 +16,12 @@ import {
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { GpsCliente } from "../utils/GeradorGPSCliente";
 import {
-  atualizarStorage,
   buscarStorage,
-  criarCallbackAdicionarPedido,
+  adicionarPedidoStorage,
 } from "../storage/ControladorStorage";
 import { buscarProdutosDaAPI } from "../services/ProdutosService";
 import ModalSelecionarProduto from "../components/ModalSelecionarProduto";
+import { gerarUID } from "../utils/Uid";
 
 export default function Pedido() {
   const [produtos, setProdutos] = useState([]);
@@ -95,14 +95,19 @@ export default function Pedido() {
       cliente.Vendedor,
     ];
     const produtosLinearizados = itensPedido.flatMap((item) => [
+      //flatMap = mapeia e achata arrays em uma única etapa, útil para transformar e linearizar dados. (ou seja todos os item. abaixo)
       item.quantidade,
       item.nome,
       item.preco,
       item.total,
     ]);
 
-    while (produtosLinearizados.length < 76) {
-      produtosLinearizados.push("", "", "", "");
+    // Corrigido: adiciona o número exato de elementos faltantes
+    const faltam = 76 - produtosLinearizados.length;
+    if (faltam > 0) {
+      produtosLinearizados.push(...Array(faltam).fill(""));
+      //push - adiciona um elemento no final de um array
+      //fill - serve para preencher um array com o mesmo valor
     }
 
     const totalGeral = itensPedido.reduce((acc, item) => acc + item.total, 0);
@@ -115,19 +120,23 @@ export default function Pedido() {
       rodape,
     };
 
-    // criar um metadados para resolver a questão do ID único.
-    // ...
+    // criando como metadados para resolver a questão do ID único.
+    const linhaFinalComMeta = {
+      meta: {
+        id: gerarUID(),
+        enviado: false,
+      },
+      dados: linhaFinal,
+    };
 
-    const callbackPedidos = criarCallbackAdicionarPedido(pedidoFinal);
-    await atualizarStorage("@pedidos", callbackPedidos);
+    await adicionarPedidoStorage("@pedidos", pedidoFinal);
 
     // deixando para coletar o GPS em segunda plano.
     GpsCliente(pedidoFinal).catch((e) =>
       console.log("Erro no envio de GPS (em background):", e)
     );
 
-    const callbackPedidosLineares = criarCallbackAdicionarPedido(linhaFinal);
-    await atualizarStorage("@pedidosLineares", callbackPedidosLineares);
+    await adicionarPedidoStorage("@pedidosLineares", linhaFinalComMeta);
 
     setItensPedido([]);
     setProdutoSelecionado(null);

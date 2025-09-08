@@ -20,7 +20,7 @@ function PedidoCard({ pedido, index, refs, baixarImagem, apagarPedido }) {
 
         if (Array.isArray(storagePedidosLineares)) {
           const pedidoAtual = storagePedidosLineares[index];
-          if (pedidoAtual?.enviado === true) {
+          if (pedidoAtual?.meta?.enviado === true) {
             setStatusEnviado(false);
           } else {
             setStatusEnviado(true);

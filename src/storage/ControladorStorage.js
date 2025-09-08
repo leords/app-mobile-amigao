@@ -28,32 +28,25 @@ export const removerStorage = async (chave) => {
   }
 };
 
-// Callback personalizado para pedidos.
-// Esta é uma função de alta ordem (função que retorna outra função).
-//
-// Usa o conceito de "closure": a função interna lembra o ambiente onde foi criada.
-// Ou seja, ao chamarmos:
-//    const callback = criarCallbackAdicionarPedido(itens);
-// o valor de `itens` é "lembrado" pela função retornada, mesmo depois que a função externa já terminou.
-//
-// Depois podemos fazer:
-//    const novosItens = callback(pedidosAtuais);
-// E isso funciona porque a função interna ainda "lembra" do `itens` que foi passado anteriormente.
-
-export const criarCallbackAdicionarPedido = (novoPedido) => {
-  if (novoPedido instanceof Promise) {
-    throw new Error("Não é permitido adicionar uma Promise ao storage.");
-  }
-  return (listaAtual) => [...listaAtual, novoPedido];
-};
-
-export const atualizarStorage = async (chave, callback) => {
+export const adicionarPedidoStorage = async (chave, novoPedido) => {
   try {
-    const dadosAtuais = await buscarStorage(chave);
-    const novosDados = callback(dadosAtuais);
-    await salvarStorage(chave, novosDados);
+    let pedidosAtuais = await buscarStorage(chave);
+    if (!Array.isArray(pedidosAtuais)) pedidosAtuais = [];
+
+    const novosPedidos = [...pedidosAtuais, novoPedido];
+
+    // Salva novamente no storage
+    await salvarStorage(chave, novosPedidos);
+
+    // apenas os pedidos lineares tem id
+    console.log(
+      "Pedido adicionado com sucesso na chave:",
+      chave,
+      novoPedido?.meta?.id
+    );
+    return novoPedido; // caso precise usar o pedido adicionado
   } catch (error) {
-    console.error(`Erro ao atualizar a chave ${chave}:`, error);
+    console.error(`Erro ao adicionar pedido na chave ${chave}`, error);
   }
 };
 

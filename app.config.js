@@ -35,6 +35,14 @@ export default ({ config }) => ({
   web: {
     favicon: "./src/assets/logo.png",
   },
+
+  updates: {
+    url: "https://u.expo.dev/b26e4981-ce4a-434d-84e2-f580482a86f9",
+  },
+  runtimeVersion: {
+    policy: "appVersion",
+  },
+
   extra: {
     URL_API_LOGIN: process.env.URL_API_LOGIN,
     URL_API_NOVO_PEDIDO: process.env.URL_API_NOVO_PEDIDO,
