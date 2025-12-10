@@ -1,20 +1,11 @@
-import {
-  View,
-  Text,
-  Image,
-  StyleSheet,
-  ActivityIndicator,
-  TouchableOpacity,
-} from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { useState } from "react";
 import Cabecalho from "../components/Cabecalho";
 import { useNavigation } from "@react-navigation/native";
 import Constants from "expo-constants";
 
 export default function Informativo() {
-  const { URL_QR_CODE } = Constants.expoConfig.extra;
   const imagem = require("../assets/logo.png");
-  const [carregando, setCarregando] = useState(true);
   const navigation = useNavigation();
 
   const abrirLogout = () => {
@@ -60,6 +51,9 @@ export default function Informativo() {
         <TouchableOpacity style={estilos.botaoSair} onPress={abrirLogout}>
           <Text style={estilos.textoBotaoSair}>Sair da minha conta</Text>
         </TouchableOpacity>
+        <Text style={{ marginTop: 20, fontWeight: 200, fontSize: 12 }}>
+          Versão do aplicativo: 2.1.1
+        </Text>
       </View>
     </View>
   );

@@ -11,13 +11,12 @@ import {
 import Cabecalho from "../components/Cabecalho";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { buscarClientesDaAPI } from "../services/ClientesService";
-import { buscarStorage } from "../storage/ControladorStorage";
+import { buscarStorage, removerStorage } from "../storage/ControladorStorage";
 import { useAuth } from "../context/AuthContext";
 
 export default function ListaCliente() {
   const [clientes, setClientes] = useState([]);
   const [busca, setBusca] = useState("");
-  //const [clientesFiltrados, setClientesFiltrados] = useState([]);
   const [positivados, setPositivados] = useState([]);
   const [atualizarPositivacao, setAtualizarPositivacao] = useState(false);
   const [carregando, setCarregando] = useState(false);
@@ -32,10 +31,6 @@ export default function ListaCliente() {
       carregarClientesLocais();
     }, [])
   );
-
-  /*   useEffect(() => {
-    filtrarClientes();
-  }, [busca, clientes]); */
 
   useFocusEffect(
     useCallback(() => {
@@ -52,6 +47,30 @@ export default function ListaCliente() {
     setAtualizarPositivacao(resultado);
   };
 
+  // ANALISA SE EXISTE LISTA DE CLIENTE LOCAL E APAGADA E FAZ A CHAMADA DA API PARA ATUALIZAR COM CADASTROS NOVOS.
+  const buscarNovoCadastrosAPI = async () => {
+    try {
+      setCarregando(true);
+
+      const clientesLocal = await buscarStorage("@clientes");
+
+      if (clientesLocal) {
+        await removerStorage("@clientes");
+      }
+
+      const filtroUsuario = user?.toLowerCase() === "admin" ? null : user;
+
+      await buscarClientesDaAPI(filtroUsuario, setClientes);
+
+      setCarregando(false);
+    } catch (error) {
+      console.error("Erro ao buscar novos cadastros:");
+    } finally {
+      setCarregando(false);
+    }
+  };
+
+  // ANALISA SE O STORAGED DE CLIENTES É VAZIO, CASO NÃO ELE FAZ A CHAMADA DA API.
   const carregarClientesLocais = async () => {
     try {
       const jsonValue = await buscarStorage("@clientes");
@@ -78,15 +97,6 @@ export default function ListaCliente() {
         typeof p.Cliente === "string" && p.Cliente.toLowerCase().includes(texto)
     );
   }, [busca, clientes]);
-
-  /*   const filtrarClientes = () => {
-    const texto = busca.toLowerCase();
-    const filtrados = clientes.filter(
-      (p) =>
-        typeof p.Cliente === "string" && p.Cliente.toLowerCase().includes(texto)
-    );
-    setClientesFiltrados(filtrados);
-  }; */
 
   const renderizarItem = ({ item }) => {
     const positivou = positivados?.some(
@@ -117,7 +127,7 @@ export default function ListaCliente() {
     <View style={estilos.container}>
       <Cabecalho
         onPress={() => {
-          // Exemplo: setAtualizarPositivacao(prev => !prev)
+          buscarNovoCadastrosAPI();
         }}
         icone={"reload"}
         descriptionIcone={"Atualizar"}
@@ -130,7 +140,17 @@ export default function ListaCliente() {
         style={estilos.entrada}
       />
       {carregando ? (
-        <ActivityIndicator size="large" color="red" marginTop={30} />
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
+          <ActivityIndicator size="large" color="red" />
+          <Text style={{ marginTop: 20, fontSize: 16, fontWeight: "600" }}>
+            Aguarde um momento...
+          </Text>
+          <Text style={{ marginTop: 6, fontSize: 12, fontWeight: "200" }}>
+            estamos buscando sua base de clientes
+          </Text>
+        </View>
       ) : (
         <View>
           <View style={estilos.containerPositivacao}>

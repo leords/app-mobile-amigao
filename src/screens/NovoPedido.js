@@ -15,13 +15,11 @@ import {
 } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { GpsCliente } from "../utils/GeradorGPSCliente";
-import {
-  buscarStorage,
-  adicionarPedidoStorage,
-} from "../storage/ControladorStorage";
+import { buscarStorage, adicionarStorage } from "../storage/ControladorStorage";
 import { buscarProdutosDaAPI } from "../services/ProdutosService";
 import ModalSelecionarProduto from "../components/ModalSelecionarProduto";
 import { gerarUID } from "../utils/Uid";
+import { SolicitarStatusPedidoPlanilha } from "../services/SolicitarStatusPedidoPlanilha";
 
 export default function Pedido() {
   const [produtos, setProdutos] = useState([]);
@@ -36,13 +34,17 @@ export default function Pedido() {
   const route = useRoute();
   const { cliente } = route.params;
 
+  // buscando produtos
   useEffect(() => {
     const carregarProdutos = async () => {
       try {
+        //BUSCANDO PRODUTOS NO STORAGED
         const dados = await buscarStorage("@produtos");
+        // Validando os dados no storaged se o mesmo é um array, se é maior que zero
         if (dados && Array.isArray(dados) && dados.length > 0) {
           setProdutos(dados);
         } else {
+          // caso não, ele faz a requisição da API, para locar produtos no storaded
           const daAPI = await buscarProdutosDaAPI();
           setProdutos(daAPI);
         }
@@ -70,11 +72,18 @@ export default function Pedido() {
       total,
     };
 
-    setItensPedido([...itensPedido, novoItem]);
-    setProdutoSelecionado(null);
-    setProdutoQuery("");
-    setQuantidade("");
-    setModalVisible(false);
+    const LIMITE_PRODUTOS = 18; // PLANILHA SUPORTA ATÉ 19 PRODUTOS POR PEDIDO, LIMITE É 18 PQ ARRAY INICIA EM 0
+
+    if (itensPedido.length <= LIMITE_PRODUTOS) {
+      setItensPedido([...itensPedido, novoItem]);
+      //Limpar campos
+      setProdutoSelecionado(null);
+      setProdutoQuery("");
+      setQuantidade("");
+      setModalVisible(false);
+    } else {
+      Alert.alert("Máximo de produtos por pedido é de 19!");
+    }
   };
 
   const removerItem = (id) => {
@@ -102,7 +111,7 @@ export default function Pedido() {
       item.total,
     ]);
 
-    // Corrigido: adiciona o número exato de elementos faltantes
+    // Corrigido: adiciona o número exato de elementos faltantes até as lacunas de total e pagamento.
     const faltam = 76 - produtosLinearizados.length;
     if (faltam > 0) {
       produtosLinearizados.push(...Array(faltam).fill(""));
@@ -110,9 +119,16 @@ export default function Pedido() {
       //fill - serve para preencher um array com o mesmo valor
     }
 
+    const identificador = ["ID", gerarUID()];
     const totalGeral = itensPedido.reduce((acc, item) => acc + item.total, 0);
     const rodape = ["TOTAL", totalGeral, "PAGAMENTO", formaPagamento];
-    const linhaFinal = [...cabecalho, ...produtosLinearizados, ...rodape];
+
+    const linhaFinal = [
+      ...cabecalho,
+      ...produtosLinearizados,
+      ...rodape,
+      ...identificador,
+    ];
 
     const pedidoFinal = {
       cabecalho,
@@ -123,20 +139,20 @@ export default function Pedido() {
     // criando como metadados para resolver a questão do ID único.
     const linhaFinalComMeta = {
       meta: {
-        id: gerarUID(),
-        enviado: false,
+        status: "digitado",
+        id: identificador[1],
       },
       dados: linhaFinal,
     };
 
-    await adicionarPedidoStorage("@pedidos", pedidoFinal);
+    await adicionarStorage("@pedidos", pedidoFinal);
 
     // deixando para coletar o GPS em segunda plano.
     GpsCliente(pedidoFinal).catch((e) =>
       console.log("Erro no envio de GPS (em background):", e)
     );
 
-    await adicionarPedidoStorage("@pedidosLineares", linhaFinalComMeta);
+    await adicionarStorage("@pedidosLineares", linhaFinalComMeta);
 
     setItensPedido([]);
     setProdutoSelecionado(null);

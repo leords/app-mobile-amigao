@@ -1,4 +1,3 @@
-import { Alert } from "react-native";
 import { removerStorage, buscarStorage } from "../storage/ControladorStorage";
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -8,8 +7,9 @@ export const limparStorageComCarga = async () => {
     "@pedidosLineares",
     "@pedidos",
     "@clientes",
-    "pedidosLinearesDeletados",
-    "pedidosDeletados",
+    "@pedidosLinearesDeletados", //
+    "@pedidosDeletados", //
+    "@cadastro",
   ];
 
   try {

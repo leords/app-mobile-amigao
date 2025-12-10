@@ -5,6 +5,7 @@ import {
   Text,
   Alert,
   ActivityIndicator,
+  Animated,
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import Cabecalho from "../components/Cabecalho";
@@ -12,8 +13,6 @@ import { useNavigation } from "@react-navigation/native";
 import { useEffect, useState } from "react";
 import { DescargaPedido } from "../services/DescargaPedido";
 import { testeConexao } from "../services/TesteConexao";
-import { pegarDataAtual } from "../utils/Data";
-import { DescargaGPS } from "../services/DescargaGPS";
 import { buscarStorage } from "../storage/ControladorStorage";
 import { limparStorageComCarga } from "../services/LimparStorageComCarga";
 import { buscarClientesDaAPI } from "../services/ClientesService";
@@ -28,6 +27,38 @@ export default function Sincronizacao() {
   const navegacao = useNavigation();
   const imagem = require("../assets/logo.png");
   const { sincronizando, setSincronizando } = useAuth();
+  const [showBar, setShowBar] = useState(false);
+  const [progress] = useState(new Animated.Value(0));
+
+  useEffect(() => {
+    let timer;
+
+    if (sincronizando) {
+      // Se passar de 5s, ativa a barra
+      timer = setTimeout(() => {
+        setShowBar(true);
+
+        // Simula o progresso até 30s
+        Animated.timing(progress, {
+          toValue: 1,
+          duration: 25000,
+          useNativeDriver: false,
+        }).start();
+      }, 5000);
+    } else {
+      setShowBar(false);
+      progress.setValue(0);
+    }
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [sincronizando]);
+
+  const barWidth = progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0%", "100%"],
+  });
 
   useEffect(() => {
     buscarPedidos();
@@ -53,9 +84,7 @@ export default function Sincronizacao() {
       // Descarrega o array de pedidos.
       await DescargaPedido();
       // Descarrega o array de GPS.
-      await DescargaGPS();
-
-      Alert.alert("Pedidos enviado com sucesso!");
+      //await DescargaGPS();
     } catch (error) {
       console.log("Erro ao enviar os pedidos!", error);
       Alert.alert("Erro ao enviar os pedidos. Tente novamente!");
@@ -72,11 +101,6 @@ export default function Sincronizacao() {
   const validarDescarga = async () => {
     // verifica se tem pedidos não enviados
     const existePedidoNaoEnviado = pedidos.some((pedido) => !pedido.enviado);
-
-    // verifica se pedidos com a data de hoje
-    // const existePedido = pedidos.some(
-    //  (pedido) => pedido?.[0]?.[0] ?? null === pegarDataAtual()
-    // );
 
     if (existePedidoNaoEnviado) {
       setRemetente("descarga");
@@ -138,25 +162,60 @@ export default function Sincronizacao() {
         descriptionIcone={""}
         image={imagem}
       />
+
       {sincronizando ? (
-        <>
-          <ActivityIndicator
-            size="large"
-            color="red"
-            marginTop="30"
-            style={styles.loader}
-          />
-          <Text
-            style={{
-              textAlign: "center",
-              marginTop: 60,
-              fontSize: 16,
-              fontWeight: 400,
-            }}
-          >
-            Processo de {remetenteLoading} em andamento, aguarde um instante...
-          </Text>
-        </>
+        // -------------
+        // MODO DESCARGA   - utilizando a barra de progresso por causa do possivel lock da api
+        // -------------
+        remetenteLoading === "descarga" ? (
+          <View style={styles.overlay}>
+            {!showBar ? (
+              // Até 5s mostra só o spinner
+              <>
+                <ActivityIndicator size="large" color="#fff" />
+                <Text style={styles.texto}>Processando pedidos...</Text>
+              </>
+            ) : (
+              // Após 5s troca para barra + mensagem
+              <>
+                <Text style={styles.texto}>
+                  Aguarde, fila de descarregamento...
+                </Text>
+                <Text style={styles.textoEsperar}>
+                  Atenção: não saia do cliente até concluir a descarga dos
+                  pedidos.
+                </Text>
+                <View style={styles.barraProgresso}>
+                  <Animated.View
+                    style={[styles.progresso, { width: barWidth }]}
+                  />
+                </View>
+              </>
+            )}
+          </View>
+        ) : (
+          // -------------
+          // MODO CARGA
+          // -------------
+          <>
+            <ActivityIndicator
+              size="large"
+              color="red"
+              marginTop="30"
+              style={styles.loader}
+            />
+            <Text
+              style={{
+                textAlign: "center",
+                marginTop: 60,
+                fontSize: 16,
+                fontWeight: 400,
+              }}
+            >
+              Processo de carga em andamento, aguarde um instante...
+            </Text>
+          </>
+        )
       ) : (
         <View style={styles.containerBotao}>
           <TouchableOpacity
@@ -221,8 +280,41 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 500,
     marginTop: 10,
+    width: "75%",
+    textAlign: "center",
   },
+  textoEsperar: {
+    color: "white",
+    fontSize: 14,
+    fontWeight: 500,
+    marginTop: 20,
+    width: "75%",
+    textAlign: "center",
+  },
+  icone: {},
   loader: {
     marginTop: 100,
+  },
+  overlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  barraProgresso: {
+    width: "60%",
+    height: 10,
+    backgroundColor: "#444",
+    borderRadius: 5,
+    marginTop: 20,
+    overflow: "hidden",
+  },
+  progresso: {
+    height: "100%",
+    backgroundColor: "#F26B1D",
   },
 });

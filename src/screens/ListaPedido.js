@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import Cabecalho from "../components/Cabecalho";
 import { PermissaoAcessoGaleria } from "../services/PermissaoAcessoGaleria";

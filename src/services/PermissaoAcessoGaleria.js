@@ -1,5 +1,5 @@
 import { CapturarSalvarImagem } from "./CapturarSalvarImagem";
-import { Alert, Platform } from "react-native";
+import { Alert } from "react-native";
 import * as MediaLibrary from "expo-media-library";
 
 export const PermissaoAcessoGaleria = async (viewRef) => {

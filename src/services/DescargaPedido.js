@@ -1,89 +1,184 @@
 import { Alert } from "react-native";
 import { EnviarSolicitacaoPedidoPlanilha } from "./EnviarSolicitacaoPedidoPlanilha";
 import { buscarStorage, salvarStorage } from "../storage/ControladorStorage";
+import { SolicitarStatusPedidoPlanilha } from "./SolicitarStatusPedidoPlanilha";
+import { DescargaGPS } from "../services/DescargaGPS";
 
-/**
- * Função robusta para enviar pedidos para a planilha do Google Sheets
- * - Garante que pedidos enviados sejam marcados como 'enviado'
- * - Mantém ordem original
- * - Evita duplicatas
- * - Tenta enviar em lote, mas preserva pedidos não enviados se houver falha
- */
+// Flag global para prevenir execução simultânea
+let isProcessing = false;
+
 export const DescargaPedido = async () => {
-  console.log("[DescargaPedido] Iniciando processo de envio...");
-
-  // Busca todos os pedidos armazenados no AsyncStorage
-  const pedidos = await buscarStorage("@pedidosLineares");
-  console.log(
-    "[DescargaPedido] Pedidos encontrados no storage:",
-    pedidos?.length
-  );
-
-  if (!pedidos || pedidos.length === 0) {
-    console.log("[DescargaPedido] Nenhum pedido novo para enviar.");
-    Alert.alert("Nenhum pedido novo para enviar.");
+  // Previne múltiplas execuções simultâneas
+  if (isProcessing) {
+    console.log("Descarga já em andamento, aguarde...");
     return;
   }
 
-  // Filtra apenas os pedidos que ainda não foram enviados
-  const pedidosNaoEnviados = pedidos.filter((p) => !p.meta.enviado);
-  console.log(
-    "[DescargaPedido] Pedidos não enviados:",
-    pedidosNaoEnviados.map((p) => p.meta.id)
-  );
-
-  if (pedidosNaoEnviados.length === 0) {
-    console.log("[DescargaPedido] Todos os pedidos já foram enviados.");
-    Alert.alert("Nenhum pedido novo para enviar.");
-    return;
-  }
+  isProcessing = true;
 
   try {
-    console.log(
-      `[DescargaPedido] Tentando enviar ${pedidosNaoEnviados.length} pedidos...`
+    console.log("Iniciando processo de envio...");
+
+    // Busca todos os pedidos armazenados no AsyncStorage
+    let pedidos = await buscarStorage("@pedidosLineares");
+
+    // Verifica se existe algum pedido
+    if (!pedidos || pedidos.length === 0) {
+      Alert.alert("Nenhum pedido novo para enviar.");
+      return;
+    }
+
+    // Pega apenas pedidos que não estão como "enviado"
+    let pedidosNaoEnviados = pedidos.filter((p) => p.meta.status !== "enviado");
+
+    if (pedidosNaoEnviados.length === 0) {
+      Alert.alert("Nenhum pedido novo para enviar.");
+      return;
+    }
+
+    //------------------------------------------
+    // ETAPA 1: Verificar os pedidos "pendentes"
+    //------------------------------------------
+    const pedidosPendentes = pedidosNaoEnviados.filter(
+      (p) => p.meta.status === "pendente"
     );
-    const dadosParaEnvio = pedidosNaoEnviados.map((p) => p.dados);
 
-    console.log("[DescargaPedido] Dados para envio:", dadosParaEnvio);
+    if (pedidosPendentes.length > 0) {
+      console.log("Pedidos pendentes: ", pedidosPendentes.length);
+      try {
+        // Consulta na planilha se esses ID já estão no histórico de hoje
+        const retorno = await SolicitarStatusPedidoPlanilha(
+          pedidosPendentes.map((p) => p.meta.id)
+        );
 
-    const retornoAPI = await EnviarSolicitacaoPedidoPlanilha(dadosParaEnvio);
+        const pedidosAtualizados = pedidos.map((p) => {
+          const status = retorno.encontrados.find((r) => r.id === p.meta.id);
 
-    console.log("[DescargaPedido] Retorno da API:", retornoAPI);
+          if (status) {
+            if (status.encontrado) {
+              return {
+                ...p,
+                meta: {
+                  ...p.meta,
+                  status: "enviado",
+                },
+              };
+            } else {
+              // Não encontrado -> marca como digitado para reenvio
+              return {
+                ...p,
+                meta: {
+                  ...p.meta,
+                  status: "digitado",
+                },
+              };
+            }
+          }
 
-    if (retornoAPI.ok) {
-      // Marca os pedidos como enviados
-      const pedidosAtualizados = pedidos.map((p) =>
-        pedidosNaoEnviados.some((n) => n.meta.id === p.meta.id)
-          ? { ...p, meta: { ...p.meta, enviado: true } }
+          return p;
+        });
+
+        await salvarStorage("@pedidosLineares", pedidosAtualizados);
+        console.log("Pendentes processados", retorno);
+
+        // 🔥 IMPORTANTE: Recarrega os pedidos atualizados
+        pedidos = pedidosAtualizados;
+        pedidosNaoEnviados = pedidos.filter((p) => p.meta.status !== "enviado");
+      } catch (error) {
+        console.log("Erro ao verificar pendentes:", error);
+      }
+    }
+
+    // ------------------------------------
+    // ETAPA 2: Enviar pedidos "digitados"
+    // ------------------------------------
+    // 🔥 IMPORTANTE: Filtra novamente dos pedidos atualizados
+    const pedidosDigitados = pedidosNaoEnviados.filter(
+      (p) => p.meta.status === "digitado"
+    );
+
+    if (pedidosDigitados.length === 0) {
+      console.log("Nenhum pedido digitado para enviar.");
+      return;
+    }
+
+    console.log("Pedidos digitados para enviar: ", pedidosDigitados.length);
+
+    try {
+      // Pegando apenas a parte dos dados de cada pedido
+      const dadosParaEnvio = pedidosDigitados.map((p) => p.dados);
+
+      // Envia os pedidos para a API
+      const retornoAPI = await EnviarSolicitacaoPedidoPlanilha(dadosParaEnvio);
+
+      // Descarrega o array de GPS
+      try {
+        await DescargaGPS();
+      } catch (gpsError) {
+        console.log("Falha ao enviar GPS:", gpsError.message);
+      }
+
+      if (retornoAPI.ok) {
+        // Marca os pedidos como enviados
+        const pedidosAtualizados = pedidos.map((p) =>
+          pedidosDigitados.some((d) => d.meta.id === p.meta.id)
+            ? {
+                ...p,
+                meta: {
+                  ...p.meta,
+                  status: "enviado",
+                },
+              }
+            : p
+        );
+
+        await salvarStorage("@pedidosLineares", pedidosAtualizados);
+        Alert.alert(
+          "Sucesso",
+          `Seus ${pedidosDigitados.length} pedido(s) foram enviados com sucesso.`
+        );
+      } else {
+        // Rollback para pendente
+        const pedidosRollback = pedidos.map((p) =>
+          pedidosDigitados.some((d) => d.meta.id === p.meta.id)
+            ? {
+                ...p,
+                meta: {
+                  ...p.meta,
+                  status: "pendente",
+                },
+              }
+            : p
+        );
+
+        await salvarStorage("@pedidosLineares", pedidosRollback);
+        Alert.alert(
+          "Erro ao enviar pedidos",
+          retornoAPI.message || "Erro desconhecido."
+        );
+      }
+    } catch (error) {
+      // Rollback para pendente
+      const rollback = pedidos.map((p) =>
+        pedidosDigitados.some((d) => d.meta.id === p.meta.id)
+          ? {
+              ...p,
+              meta: {
+                ...p.meta,
+                status: "pendente",
+              },
+            }
           : p
       );
-      console.log(
-        "[DescargaPedido] Atualizando pedidos como enviados:",
-        pedidosNaoEnviados.map((p) => p.meta.id)
-      );
-      await salvarStorage("@pedidosLineares", pedidosAtualizados);
-      console.log(
-        "[DescargaPedido] Pedidos marcados como enviados com sucesso."
-      );
+
+      await salvarStorage("@pedidosLineares", rollback);
       Alert.alert(
-        "Sucesso",
-        `${pedidosNaoEnviados.length} pedido(s) enviados com sucesso.`
-      );
-    } else {
-      console.log(
-        "[DescargaPedido] Erro ao enviar pedidos para API:",
-        retornoAPI
-      );
-      Alert.alert(
-        "Erro ao enviar pedidos",
-        retornoAPI.message || "Erro desconhecido."
+        "Erro",
+        "Falha ao enviar pedidos. Eles foram desmarcados e poderão ser reenviados na próxima tentativa."
       );
     }
-  } catch (error) {
-    console.error("[DescargaPedido] Erro inesperado ao enviar pedidos:", error);
-    Alert.alert(
-      "Erro",
-      "Falha ao enviar pedidos. Nenhum pedido foi marcado como enviado."
-    );
+  } finally {
+    // Libera o lock
+    isProcessing = false;
   }
 };

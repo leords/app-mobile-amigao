@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// Buscar dados
+// Busca dados
 export const buscarStorage = async (chave) => {
   try {
     const dados = await AsyncStorage.getItem(chave);
@@ -19,7 +19,7 @@ export const salvarStorage = async (chave, valor) => {
   }
 };
 
-// Remover dados
+// Remove dados
 export const removerStorage = async (chave) => {
   try {
     await AsyncStorage.removeItem(chave);
@@ -28,7 +28,8 @@ export const removerStorage = async (chave) => {
   }
 };
 
-export const adicionarPedidoStorage = async (chave, novoPedido) => {
+// Adicionar um novo pedido a mais na lista
+export const adicionarStorage = async (chave, novoPedido) => {
   try {
     let pedidosAtuais = await buscarStorage(chave);
     if (!Array.isArray(pedidosAtuais)) pedidosAtuais = [];
@@ -39,11 +40,7 @@ export const adicionarPedidoStorage = async (chave, novoPedido) => {
     await salvarStorage(chave, novosPedidos);
 
     // apenas os pedidos lineares tem id
-    console.log(
-      "Pedido adicionado com sucesso na chave:",
-      chave,
-      novoPedido?.meta?.id
-    );
+    console.log("Pedido adicionado com sucesso na chave:", chave);
     return novoPedido; // caso precise usar o pedido adicionado
   } catch (error) {
     console.error(`Erro ao adicionar pedido na chave ${chave}`, error);

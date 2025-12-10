@@ -53,16 +53,6 @@ export default function ListaProduto() {
     );
   }, [produtos, busca]);
 
-  // const filtrarProdutos = () => {
-  //   const texto = busca.toLowerCase();
-  //   const filtrados = produtos.filter(
-  //     (p) =>
-  //       typeof p?.Produto === "string" &&
-  //       p.Produto.toLowerCase().includes(texto)
-  //   );
-  //   setProdutosFiltrados(filtrados);
-  // };
-
   const renderizarItem = ({ item }) => (
     <View style={estilos.item}>
       <View style={estilos.containerDescricao}>

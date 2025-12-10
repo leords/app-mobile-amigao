@@ -2,7 +2,7 @@ import "dotenv/config";
 
 export default ({ config }) => ({
   ...config,
-  name: "Suporte Amigão",
+  name: "Vendas Amigão",
   slug: "app-distribuidora-amigao",
   version: "1.0.1",
   orientation: "portrait",
@@ -52,6 +52,10 @@ export default ({ config }) => ({
     URL_QR_CODE: process.env.URL_QR_CODE,
     URL_API_VENDAS: process.env.URL_API_VENDAS,
     URL_API_PEDIDOS_DELETADOS: process.env.URL_API_PEDIDOS_DELETADOS,
+    URL_API_STATUS_PEDIDO: process.env.URL_API_STATUS_PEDIDO,
+    URL_API_CNPJ: process.env.URL_API_CNPJ,
+    URL_API_NOVO_CADASTRO: process.env.URL_API_NOVO_CADASTRO,
+
     eas: {
       projectId: "b26e4981-ce4a-434d-84e2-f580482a86f9",
     },

@@ -1,5 +1,4 @@
 import { salvarStorage } from "../storage/ControladorStorage";
-import { pegarDiaSemanaHoje } from "../utils/Data";
 import Constants from "expo-constants";
 
 export const buscarClientesDaAPI = async (vendedor, setClientes) => {

@@ -10,7 +10,7 @@ import React from "react";
 // seja re-renderizado caso não haja nenhuma alteração em suas props.
 
 function PedidoCard({ pedido, index, refs, baixarImagem, apagarPedido }) {
-  const [statusPedido, setStatusEnviado] = useState(true);
+  const [statusPedido, setStatusEnviado] = useState("digitado");
 
   useFocusEffect(
     useCallback(() => {
@@ -20,10 +20,12 @@ function PedidoCard({ pedido, index, refs, baixarImagem, apagarPedido }) {
 
         if (Array.isArray(storagePedidosLineares)) {
           const pedidoAtual = storagePedidosLineares[index];
-          if (pedidoAtual?.meta?.enviado === true) {
-            setStatusEnviado(false);
+          if (pedidoAtual?.meta?.status === "enviado") {
+            setStatusEnviado("enviado");
+          } else if (pedidoAtual?.meta?.status === "pendente") {
+            setStatusEnviado("pendente");
           } else {
-            setStatusEnviado(true);
+            setStatusEnviado("digitado");
           }
         }
       };
@@ -92,7 +94,7 @@ function PedidoCard({ pedido, index, refs, baixarImagem, apagarPedido }) {
       </View>
 
       <View style={styles.acoesPedido}>
-        {statusPedido ? (
+        {statusPedido === "digitado" ? (
           <TouchableOpacity
             onPress={() => {
               Alert.alert(
@@ -107,8 +109,10 @@ function PedidoCard({ pedido, index, refs, baixarImagem, apagarPedido }) {
           >
             <FontAwesome name="trash-o" size={22} color="red" />
           </TouchableOpacity>
-        ) : (
+        ) : statusPedido === "enviado" ? (
           <FontAwesome name="check-square-o" size={22} color="green" />
+        ) : (
+          <FontAwesome name="warning" size={22} color="orange" />
         )}
 
         <TouchableOpacity onPress={() => baixarImagem(index)}>

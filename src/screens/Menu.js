@@ -46,7 +46,7 @@ export default function Menu() {
         <BotaoPaginaInicio
           BGcolor={"#FFA500"}
           destinationPage={"Communication"}
-          image={<AntDesign name="cloudupload" size={34} color="white" />}
+          image={<AntDesign name="cloud-upload" size={34} color="white" />}
           name={"Comunicação"}
         />
         <BotaoPaginaInicio
@@ -54,6 +54,12 @@ export default function Menu() {
           destinationPage={"GerarQRCode"}
           image={<FontAwesome6 name="pix" size={34} color="white" />}
           name={"Gerar pagamentos"}
+        />
+        <BotaoPaginaInicio
+          BGcolor={"#EF3C28"}
+          destinationPage={"NovoCliente"}
+          image={<FontAwesome6 name="user-plus" size={32} color="white" />}
+          name={"Novo cliente"}
         />
       </View>
     </View>

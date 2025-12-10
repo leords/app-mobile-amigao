@@ -1,21 +1,19 @@
 import Constants from "expo-constants";
 
-export const EnviarSolicitacaoPedidoPlanilha = async (pedidos) => {
-  const { URL_API_NOVO_PEDIDO } = Constants.expoConfig.extra;
+export const enviarSolicitacaoNovoCadastroPlanilha = async (cadastro) => {
+  const { URL_API_NOVO_CADASTRO } = Constants.expoConfig.extra;
   try {
-    const response = await fetch(URL_API_NOVO_PEDIDO, {
+    const response = await fetch(URL_API_NOVO_CADASTRO, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        pedidos,
-        action: "criarPedido",
+        cadastro,
       }),
     });
 
     const json = await response.json(); // <- agora pega objeto, não texto
-    console.log(json);
 
     return json; // retorna o objeto { ok: true, message: "OK" }
   } catch (error) {
