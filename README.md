@@ -57,5 +57,5 @@ Em desenvolvimento ativo.
 ---
 
 ## 👨‍💻 Desenvolvedor
-Aplicativo desenvolvido por **Leonardo Rodrigues** (Amigão Distribuidora de Bebidas).
+Aplicativo desenvolvido por **Leonardo Rodrigues**.
 
