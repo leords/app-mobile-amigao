@@ -52,7 +52,7 @@ export default function Informativo() {
           <Text style={estilos.textoBotaoSair}>Sair da minha conta</Text>
         </TouchableOpacity>
         <Text style={{ marginTop: 20, fontWeight: 200, fontSize: 12 }}>
-          Versão do aplicativo: 2.1.1
+          Versão do aplicativo: 2.1.2 - @2026
         </Text>
       </View>
     </View>
