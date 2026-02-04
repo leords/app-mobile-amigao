@@ -1,7 +1,8 @@
 import Constants from "expo-constants";
 
 export const EnviarSolicitacaoPedidoPlanilha = async (pedidos) => {
-  const { URL_API_NOVO_PEDIDO } = Constants.expoConfig.extra;
+  const URL_API_NOVO_PEDIDO = process.env.EXPO_PUBLIC_URL_API_NOVO_PEDIDO
+
   try {
     const response = await fetch(URL_API_NOVO_PEDIDO, {
       method: "POST",
@@ -13,6 +14,8 @@ export const EnviarSolicitacaoPedidoPlanilha = async (pedidos) => {
         action: "criarPedido",
       }),
     });
+
+    console.log("URL: ", process.env.EXPO_PUBLIC_URL_API_NOVO_PEDIDO);
 
     const json = await response.json(); // <- agora pega objeto, não texto
     console.log(json);

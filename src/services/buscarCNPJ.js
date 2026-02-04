@@ -1,7 +1,7 @@
 import Constants from "expo-constants";
 
 export const BuscarCNPJ = async (cnpj) => {
-  const { URL_API_CNPJ } = Constants.expoConfig.extra;
+  const URL_API_CNPJ  = process.env.EXPO_PUBLIC_URL_API_CNPJ
   try {
     const response = await fetch(`${URL_API_CNPJ}${cnpj}`, {
       method: "GET",

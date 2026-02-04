@@ -7,7 +7,7 @@ export const buscarVendasDaAPI = async (
   setRecarregar,
   setErro
 ) => {
-  const { URL_API_VENDAS } = Constants.expoConfig.extra;
+  const  URL_API_VENDAS  = process.env.EXPO_PUBLIC_URL_API_VENDAS
 
   try {
     const response = await fetch(URL_API_VENDAS, {

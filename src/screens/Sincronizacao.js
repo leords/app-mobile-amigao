@@ -14,7 +14,7 @@ import { useEffect, useState } from "react";
 import { DescargaPedido } from "../services/DescargaPedido";
 import { testeConexao } from "../services/TesteConexao";
 import { buscarStorage } from "../storage/ControladorStorage";
-import { limparStorageComCarga } from "../services/LimparStorageComCarga";
+import { limparStorageComCarga } from "../services/limparStorageComCarga";
 import { buscarClientesDaAPI } from "../services/ClientesService";
 import { buscarProdutosDaAPI } from "../services/ProdutosService";
 import { useAuth } from "../context/AuthContext";
