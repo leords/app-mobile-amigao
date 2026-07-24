@@ -44,7 +44,7 @@ export default ({ config }) => ({
   },
 
   extra: {
-    URL_API_LOGIN: process.env.URL_API_LOGIN,
+/*     URL_API_LOGIN: process.env.URL_API_LOGIN,
     URL_API_NOVO_PEDIDO: process.env.URL_API_NOVO_PEDIDO,
     URL_API_NOVO_GPS: process.env.URL_API_NOVO_GPS,
     URL_CLIENTES: process.env.URL_CLIENTES,
@@ -55,7 +55,7 @@ export default ({ config }) => ({
     URL_API_STATUS_PEDIDO: process.env.URL_API_STATUS_PEDIDO,
     URL_API_CNPJ: process.env.URL_API_CNPJ,
     URL_API_NOVO_CADASTRO: process.env.URL_API_NOVO_CADASTRO,
-
+ */
     eas: {
       projectId: "b26e4981-ce4a-434d-84e2-f580482a86f9",
     },

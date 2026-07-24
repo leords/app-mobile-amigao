@@ -18,7 +18,7 @@ import { GpsCliente } from "../utils/GeradorGPSCliente";
 import { buscarStorage, adicionarStorage } from "../storage/ControladorStorage";
 import { buscarProdutosDaAPI } from "../services/ProdutosService";
 import ModalSelecionarProduto from "../components/ModalSelecionarProduto";
-import { gerarUID } from "../utils/Uid";
+import { gerarPedidoId, gerarUID } from "../utils/Uid";
 import { SolicitarStatusPedidoPlanilha } from "../services/SolicitarStatusPedidoPlanilha";
 
 export default function Pedido() {
@@ -119,9 +119,15 @@ export default function Pedido() {
       //fill - serve para preencher um array com o mesmo valor
     }
 
-    const identificador = ["ID", gerarUID()];
+    //CRIANDO A BASE PARA O ID DO PEDIDO
+    const base = ["amigao", cabecalho[0], produtosLinearizados[3], new Date().getTime()].join("|")
+
+
+    const identificador = ["ID", gerarPedidoId(base)];
+    //const identificador = ["ID", '782926a3-7a0c-522d-8791-b0071d2f0ee2'];
+    
     const totalGeral = itensPedido.reduce((acc, item) => acc + item.total, 0);
-    const rodape = ["TOTAL", totalGeral, "PAGAMENTO", formaPagamento];
+    const rodape = ["TOTAL", totalGeral, "PAGAMENTO", formaPagamento];  //   //
 
     const linhaFinal = [
       ...cabecalho,

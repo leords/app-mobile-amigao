@@ -2,7 +2,7 @@ import { Alert } from "react-native";
 import Constants from "expo-constants";
 
 export const EnviarSolicitacaoGPSPlanilha = async (gps) => {
-  const { URL_API_NOVO_GPS } = Constants.expoConfig.extra;
+  const URL_API_NOVO_GPS  = process.env.EXPO_PUBLIC_URL_API_NOVO_GPS
   try {
     const response = await fetch(URL_API_NOVO_GPS, {
       method: "POST",

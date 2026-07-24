@@ -1,11 +1,11 @@
 # 📱 App de Suporte às Vendas Externas — Amigão Distribuidora
 
-<p align="center">
-  <img src="./assets/app-menu.png" width="300" />
-</p>
-
 Aplicativo mobile criado sob medida para apoiar o trabalho dos vendedores externos, totalmente alinhado ao modelo interno da empresa e proporcionando agilidade na geração de pedidos, consulta de informações e gestão de clientes.
 Construído com **Expo**, **React Native** e **JavaScript**, integrado a diversas APIs e à infraestrutura interna da empresa.
+
+<p align="center">
+  <img src="./assets/app-menu.png" width="250" />
+</p>
 
 ---
 
@@ -57,5 +57,5 @@ Em desenvolvimento ativo.
 ---
 
 ## 👨‍💻 Desenvolvedor
-Aplicativo desenvolvido por **Leonardo Rodrigues** (Amigão Distribuidora de Bebidas).
+Aplicativo desenvolvido por **Leonardo Rodrigues**.
 

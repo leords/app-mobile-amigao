@@ -1,7 +1,7 @@
 import Constants from "expo-constants";
 
 export const SolicitarStatusPedidoPlanilha = async (idsPedidos) => {
-  const { URL_API_STATUS_PEDIDO } = Constants.expoConfig.extra;
+  const URL_API_STATUS_PEDIDO = process.env.EXPO_PUBLIC_URL_API_STATUS_PEDIDO
   try {
     const response = await fetch(URL_API_STATUS_PEDIDO, {
       method: "POST",

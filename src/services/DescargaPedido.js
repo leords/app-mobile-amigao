@@ -1,8 +1,7 @@
 import { Alert } from "react-native";
-import { EnviarSolicitacaoPedidoPlanilha } from "./EnviarSolicitacaoPedidoPlanilha";
 import { buscarStorage, salvarStorage } from "../storage/ControladorStorage";
-import { SolicitarStatusPedidoPlanilha } from "./SolicitarStatusPedidoPlanilha";
 import { DescargaGPS } from "../services/DescargaGPS";
+import { EnviarPedidoGateway } from "./EnviarPedidoGateway";
 
 // Flag global para prevenir execução simultânea
 let isProcessing = false;
@@ -20,96 +19,31 @@ export const DescargaPedido = async () => {
     console.log("Iniciando processo de envio...");
 
     // Busca todos os pedidos armazenados no AsyncStorage
-    let pedidos = await buscarStorage("@pedidosLineares");
+    const pedidos = await buscarStorage("@pedidosLineares");
 
     // Verifica se existe algum pedido
     if (!pedidos || pedidos.length === 0) {
       Alert.alert("Nenhum pedido novo para enviar.");
       return;
     }
-
+    // opções de status: enviado | digitado | pendente
     // Pega apenas pedidos que não estão como "enviado"
-    let pedidosNaoEnviados = pedidos.filter((p) => p.meta.status !== "enviado");
+    const pedidosNaoEnviados = pedidos.filter((p) => p.meta.status !== "enviado");
 
     if (pedidosNaoEnviados.length === 0) {
       Alert.alert("Nenhum pedido novo para enviar.");
       return;
     }
 
-    //------------------------------------------
-    // ETAPA 1: Verificar os pedidos "pendentes"
-    //------------------------------------------
-    const pedidosPendentes = pedidosNaoEnviados.filter(
-      (p) => p.meta.status === "pendente"
-    );
-
-    if (pedidosPendentes.length > 0) {
-      console.log("Pedidos pendentes: ", pedidosPendentes.length);
-      try {
-        // Consulta na planilha se esses ID já estão no histórico de hoje
-        const retorno = await SolicitarStatusPedidoPlanilha(
-          pedidosPendentes.map((p) => p.meta.id)
-        );
-
-        const pedidosAtualizados = pedidos.map((p) => {
-          const status = retorno.encontrados.find((r) => r.id === p.meta.id);
-
-          if (status) {
-            if (status.encontrado) {
-              return {
-                ...p,
-                meta: {
-                  ...p.meta,
-                  status: "enviado",
-                },
-              };
-            } else {
-              // Não encontrado -> marca como digitado para reenvio
-              return {
-                ...p,
-                meta: {
-                  ...p.meta,
-                  status: "digitado",
-                },
-              };
-            }
-          }
-
-          return p;
-        });
-
-        await salvarStorage("@pedidosLineares", pedidosAtualizados);
-        console.log("Pendentes processados", retorno);
-
-        // 🔥 IMPORTANTE: Recarrega os pedidos atualizados
-        pedidos = pedidosAtualizados;
-        pedidosNaoEnviados = pedidos.filter((p) => p.meta.status !== "enviado");
-      } catch (error) {
-        console.log("Erro ao verificar pendentes:", error);
-      }
-    }
-
-    // ------------------------------------
-    // ETAPA 2: Enviar pedidos "digitados"
-    // ------------------------------------
-    // 🔥 IMPORTANTE: Filtra novamente dos pedidos atualizados
-    const pedidosDigitados = pedidosNaoEnviados.filter(
-      (p) => p.meta.status === "digitado"
-    );
-
-    if (pedidosDigitados.length === 0) {
-      console.log("Nenhum pedido digitado para enviar.");
-      return;
-    }
-
-    console.log("Pedidos digitados para enviar: ", pedidosDigitados.length);
+    console.log("Pedidos para enviar: ", pedidosNaoEnviados.length);
 
     try {
-      // Pegando apenas a parte dos dados de cada pedido
-      const dadosParaEnvio = pedidosDigitados.map((p) => p.dados);
 
-      // Envia os pedidos para a API
-      const retornoAPI = await EnviarSolicitacaoPedidoPlanilha(dadosParaEnvio);
+      // Envia para a API que valida e salva na planilha
+
+      const retornoAPI = await EnviarPedidoGateway(pedidosNaoEnviados);
+
+      console.log('Retorno da API:', retornoAPI)
 
       // Descarrega o array de GPS
       try {
@@ -117,64 +51,67 @@ export const DescargaPedido = async () => {
       } catch (gpsError) {
         console.log("Falha ao enviar GPS:", gpsError.message);
       }
+      // -------------------------
 
-      if (retornoAPI.ok) {
-        // Marca os pedidos como enviados
-        const pedidosAtualizados = pedidos.map((p) =>
-          pedidosDigitados.some((d) => d.meta.id === p.meta.id)
-            ? {
-                ...p,
-                meta: {
-                  ...p.meta,
-                  status: "enviado",
-                },
-              }
-            : p
-        );
+      if (retornoAPI.sucesso && retornoAPI.resultado) {
+        const { salvo = [], duplicado = [], falhou = [] } = retornoAPI.resultado;
+        const { resumo } = retornoAPI;
+
+        // Atualiza o status de cada pedido baseado no retorno da API
+        const pedidosAtualizados = pedidos.map((p) => {
+          const pedidoId = p.meta.id;
+
+          // Se foi salvo com sucesso ou é duplicado (já existia)
+          if (salvo.includes(pedidoId) || duplicado.includes(pedidoId)) {
+            return {
+              ...p,
+              meta: {
+                ...p.meta,
+                status: "enviado",
+              },
+            };
+          }
+
+          // Se foi cancelado ou problemas ao salvar no sheets.
+          if (falhou.includes(pedidoId)) {
+            return {
+              ...p,
+              meta: {
+                ...p.meta,
+                status: "pendente",
+              },
+            };
+          }
+
+        
+          return p;
+        });
 
         await salvarStorage("@pedidosLineares", pedidosAtualizados);
-        Alert.alert(
-          "Sucesso",
-          `Seus ${pedidosDigitados.length} pedido(s) foram enviados com sucesso.`
-        );
-      } else {
-        // Rollback para pendente
-        const pedidosRollback = pedidos.map((p) =>
-          pedidosDigitados.some((d) => d.meta.id === p.meta.id)
-            ? {
-                ...p,
-                meta: {
-                  ...p.meta,
-                  status: "pendente",
-                },
-              }
-            : p
-        );
 
-        await salvarStorage("@pedidosLineares", pedidosRollback);
+        // Monta mensagem de sucesso detalhada
+        let mensagem = `${resumo.salvos} pedido(s) enviado(s) com sucesso.`;
+        
+        if (resumo.duplicados > 0) {
+          mensagem += `\n${resumo.duplicados} pedido(s) já existia(m) no sistema.`;
+        }
+        
+        if (resumo.falharam > 0) {
+          mensagem += `\n${resumo.falharam} pedido(s) falharam e serão reenviados na próxima descarga.`;
+        }
+
+        Alert.alert("Sucesso", mensagem);
+      } else {
         Alert.alert(
           "Erro ao enviar pedidos",
           retornoAPI.message || "Erro desconhecido."
         );
       }
     } catch (error) {
-      // Rollback para pendente
-      const rollback = pedidos.map((p) =>
-        pedidosDigitados.some((d) => d.meta.id === p.meta.id)
-          ? {
-              ...p,
-              meta: {
-                ...p.meta,
-                status: "pendente",
-              },
-            }
-          : p
-      );
-
-      await salvarStorage("@pedidosLineares", rollback);
+      console.log("Erro no envio:", error);
       Alert.alert(
         "Erro",
-        "Falha ao enviar pedidos. Eles foram desmarcados e poderão ser reenviados na próxima tentativa."
+        "Falha ao enviar pedidos. Tente novamente mais tarde."
       );
     }
   } finally {

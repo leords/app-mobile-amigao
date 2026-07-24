@@ -2,7 +2,7 @@ import { Alert } from "react-native";
 import Constants from "expo-constants";
 
 export const ValidarAdmin = async (usuario, senha) => {
-  const { URL_API_LOGIN } = Constants.expoConfig.extra;
+  const URL_API_LOGIN= process.env.EXPO_PUBLIC_URL_API_LOGIN
 
   try {
     const response = await fetch(URL_API_LOGIN, {

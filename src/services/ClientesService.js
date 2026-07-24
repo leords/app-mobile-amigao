@@ -3,7 +3,7 @@ import Constants from "expo-constants";
 
 export const buscarClientesDaAPI = async (vendedor, setClientes) => {
   //const { URL_CLIENTES } = Constants.expoConfig.extra;
-  const URL_CLIENTES = Constants.expoConfig.extra.URL_CLIENTES;
+  const URL_CLIENTES = process.env.EXPO_PUBLIC_URL_CLIENTES
   try {
     // está puxando a base total do vendedor
     //const dia = pegarDiaSemanaHoje();
