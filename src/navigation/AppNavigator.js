@@ -14,7 +14,7 @@ export const AppNavigator = () => {
   useEffect(() => {
     const checkUser = async () => {
       const storedUser = await buscarStorage("@user");
-      // valida a existencia
+      // valida a existencia do usuario em storaged
       if (storedUser && typeof storedUser == "string") {
         setUser(storedUser);
         setLoading(false);
@@ -36,7 +36,7 @@ export const AppNavigator = () => {
 
   return (
     // Navigation confirma se usuário existe e caso exista, chama o PrivateStack que são rotas privadas!!
-    // se não, vai para o AuthStack que é a rota de Login.
+    // se não, vai para o AuthStack que é a rota de Login
     <NavigationContainer>
       {user ? <PrivateStack /> : <AuthStack />}
     </NavigationContainer>
